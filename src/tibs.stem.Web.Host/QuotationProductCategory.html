@@ -1,0 +1,178 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Table</title>
+    <meta charset="utf-8" />
+    <style>
+        table {
+            width: 100%;
+            page-break-inside: auto;
+        }
+
+        table, th, td {
+            border: 2px solid #d9d9d9;
+            border-collapse: collapse;
+        }
+
+        .vendorprint {
+            -webkit-print-color-adjust: exact;
+        }
+
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        th, td {
+            padding: 5px;
+            text-align: center;
+        }
+
+        p {
+            margin-top: 1px;
+            margin-bottom: 1px;
+        }
+
+        table#t01 tr:nth-child(even) {
+            /*background-color: #eee;*/
+        }
+
+        table#t01 tr:nth-child(odd) {
+            /* background-color: #fff;*/
+        }
+
+        #RemoveListnumber {
+            list-style: none;
+        }
+
+        hr {
+            border: 2px dotted #bfbfbf !important;
+            border-style: none none dotted;
+            color: #fff;
+            background-color: #fff;
+        }
+
+        table#t01 th {
+            /*background-color: #0e2563;*/
+            background-color: #bfbfbf;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body style="font-family:Calibri">
+    <div style="color:transparent;">
+        {header_Content}
+    </div>
+    <table id="t01" style="page-break-inside:avoid;page-break-after:auto;margin-top:-23px;" class="vendorprint">
+        <tr style="text-align:center;display:none;">
+            <th style="width:4%">Sl/No</th>
+            <th style="width:25%">Description</th>
+            <th style="width:30%">Image</th>
+            <th style="width:7%">Qty</th>
+            <th style="width:7%">UOM</th>
+            <th style="width:8%">Unit Price</th>
+            <th style="width:10%;color:#ce4646;">Net Price Discounted</th>
+            <th style="width:10%">Amount (AED)</th>
+        </tr>
+        <!--<tr style="color:white;text-align:center;">
+            <td colspan="8" style="color:black;text-align: center;background: #f5e2e2;">Mezzanine</td>
+        </tr>-->
+        {Product_Content}
+    </table>
+    <br>
+    <div style="page-break-inside:avoid;page-break-after:auto;">
+        <p style="float: right;margin-right: 10%;font-size: 15px;"><b>Summary</b></p>
+        <table style="border: 2px solid #000;page-break-inside:avoid;page-break-after:auto;">
+            <tr style="page-break-inside:avoid;page-break-after:auto;">
+                <th colspan="2" style="width:91%;border: 2px solid #000;text-align:right;">Total Gross Amount</th>
+                <th colspan="1" style="width:9%;border: 2px solid #000;text-align:right">{Gross_Amount}</th>
+            </tr>
+            {Discount_Amount}
+            <tr style="page-break-inside:avoid;page-break-after:auto;background: rgb(217, 217, 217);">
+                <td colspan="2" style="text-align:right;border: 2px solid #000;">Total Net Amount</td>
+                <td colspan="1" style="text-align:right;border: 2px solid #000;">{Total_AfterDiscount}</td>
+            </tr>
+            {Vat_Amount}
+            {Discount}
+            <tr style="page-break-inside:avoid;page-break-after:auto;background: rgb(166, 166, 166);">
+                <td colspan="2" style="text-align:right;border: 2px solid #000;"><b>Total</b></td>
+                <td colspan="1" style="text-align:right;border: 2px solid #000;"><b>{Total_Amount}</b></td>
+            </tr>
+            <tr style="page-break-inside:avoid;page-break-after:auto;background: rgb(166, 166, 166);color: #fff;">
+                <td colspan="1" style="text-align:right;border: 2px solid #000;width: 20%;">Amount in Words</td>
+                <td colspan="2" style="text-align:left;border: 2px solid #000;">(Dirhams {Amount_Words} and Fils 0/100 only)</td>
+            </tr>
+        </table>
+    </div>
+
+    <br />
+    <br />
+    <div style="page-break-inside:avoid;page-break-after:auto;">
+        <p><span style="font-weight: bold;">Terms and Conditions</span></p>
+        {Terms And Conditions}
+        <!--<ul>
+            <li>&nbsp;This offer is valid for 60 days.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <li>&nbsp;All confirmations are subject to final `Order Acknowledgement` by BAFCO Trading LLC.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <li>&nbsp;Upon `Order Acknowledgement`, no alteration or return is permissible.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <li>&nbsp;Payment Terms: <strong>100% Payment</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <li>&nbsp;BAFCO has the right to refrain from delivery if the payment terms are not adhered to.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <li>&nbsp;All goods remain the property of BAFCO Trading LLC until paid in full.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <li>&nbsp;Delivery will only take place in the presence of the customer’s representative.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <li>&nbsp;Confirmation of this quotation constitutes acceptance in full of the above terms and conditions.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <li>&nbsp;Any return of materials after delivery or cancellation of confirmed order will be charged:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;30% of the net value of goods returned or cancelled, subject to approvals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;40% of the net value of fabricated and upholstered goods returned or cancelled, subject to approvals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+            <li>&nbsp;Delivery:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a. All delivery will be subject to availability of stock at the time of confirmation.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+            <p><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Non-available items delivery leadtime will be 6-10 weeks upon receiving of LPO.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b. Partial delivery should be allowed.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: rgb(216, 97, 88);">&nbsp;&nbsp;&nbsp;c. Delivery of special order &amp; custom items must be accepted within 48 hrs of notification that the items are</span></p>
+            <p><span style="color: rgb(216, 97, 88);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;available for delivery.If the client cannot accept delivery, a Daily Storage Fee of 100 AED will be charged,&nbsp;</span></p>
+            <p><span style="color: rgb(216, 97, 88);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 weeks after notification.&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+            <li>Trade license copy as per UAE law to be submitted along with LPO.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <li>Quoted amount is based on the attached drawing. Any variation will be charged accordingly.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+            <li><span style="color: rgb(216, 97, 88);">Starting 1st of January 2018, all invoices are subject to 5% VAT.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li>
+        </ul>-->
+        </div>
+
+    <div style="page-break-inside:avoid;page-break-after:auto;">
+        <br />
+        <br />
+        <table style="border: 3px dotted darkgray !important;border-right:none !important;border-left:none !important;">
+            <tr>
+                <td style="text-align:left;border: 0px solid transparent;font-size: 20px;font-weight: 700;width:70%">On Behalf of BAFCO Trading LLC</td>
+                <td style="text-align:left;border: 0px solid transparent;font-size: 20px;font-weight: 700;">Client Confirmation</td>
+            </tr>
+        </table>
+        <br />
+        <br />
+        <table style="border:none;">
+            <tr>
+                <td style="text-align:left;border: 0px solid transparent;font-size: 18px;font-weight: 600;color:#fff;">t</td>
+            </tr>
+            <tr>
+                <td style="text-align:left;border: 0px solid transparent;font-size: 18px;font-weight: 600;">{CreatorName}</td>
+            </tr>
+            <tr>
+                <td style="text-align:left;border: 0px solid transparent;font-size: 20px;font-weight: 700;color:darkgray;width:70%">{CreatorRole}</td>
+                <td style="text-align:left;border: 0px solid transparent;font-size: 20px;font-weight: 700;color:darkgray;"></td>
+            </tr>
+            <tr>
+                <td style="text-align:left;border: 0px solid transparent;font-size: 20px;font-weight: 700;color:darkgray;width:70%;color:#fff;">s</td>
+                <td style="text-align:left;border: 0px solid transparent;font-size: 20px;font-weight: 700;color:darkgray;"></td>
+            </tr>
+            <tr>
+                <td style="text-align:left;border: 0px solid transparent;font-size: 18px;font-weight: 600;">{SM}</td>
+            </tr>
+            <tr>
+                <td style="text-align:left;border: 0px solid transparent;font-size: 20px;font-weight: 700;color:darkgray;width:70%">Sales Manager</td>
+                <td style="text-align:left;border: 0px solid transparent;font-size: 20px;font-weight: 700;color:darkgray;">Signature & Company stamp</td>
+            </tr>
+        </table>
+    </div>
+        <br />
+        <div style="color:#fff;">
+            {footer_Content}
+        </div>
+</body>
+</html>
