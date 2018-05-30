@@ -325,6 +325,7 @@ namespace tibs.stem.Tenants.Dashboard
             //        teamid = teamid.Take(teamid.Length - 1).ToArray();
             //    }
             //}
+
             var Datas = new List<SliderDataList>();
 
             string viewquery = "SELECT * FROM [dbo].[View_SliderUser]";
