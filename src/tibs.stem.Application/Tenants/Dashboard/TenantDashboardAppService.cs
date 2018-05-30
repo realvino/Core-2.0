@@ -316,23 +316,21 @@ namespace tibs.stem.Tenants.Dashboard
         }
         public List<SliderDataList> GetSalesExecutive(String datainput)
         {
-            string[] teamid = new string[] { };
-            if (datainput != null)
-            {
-                teamid = datainput.Split(',');
-                if (teamid.Length > 1)
-                {
-                    teamid = teamid.Take(teamid.Length - 1).ToArray();
-                }
-            }
+            //string[] teamid = new string[] { };
+            //if (datainput != null)
+            //{
+            //    teamid = datainput.Split(',');
+            //    if (teamid.Length > 1)
+            //    {
+            //        teamid = teamid.Take(teamid.Length - 1).ToArray();
+            //    }
+            //}
             var Datas = new List<SliderDataList>();
-            string viewquery = "SELECT * FROM [dbo].[View_SliderUser] WHERE TeamId = 1000";
-            if (teamid.Length > 0)
+
+            string viewquery = "SELECT * FROM [dbo].[View_SliderUser]";
+            if (datainput.Length > 0)
             {
-                foreach (var item in teamid)
-                {
-                    viewquery = viewquery + " or TeamId = " + item;
-                }
+                    viewquery = viewquery + "  WHERE TeamId in("+ datainput + ")";
             }
 
             DataTable viewtable = new DataTable();
