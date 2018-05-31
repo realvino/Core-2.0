@@ -19,7 +19,9 @@ namespace tibs.stem.Tenants.Dashboard.Dto
     }
     public class GraphInput
     {
-        public string Id { get; set; }
+        public string UserId { get; set; }
+        public string TeamId { get; set; }
+
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
     }

@@ -1649,6 +1649,16 @@ namespace tibs.stem.Inquirys
                 var Jobactivity = actinput.MapTo<JobActivity>();
                 await _jobActivityRepository.InsertAsync(Jobactivity);
             }
+            if (designer.DesignerId != null && input.DesignerId != null && input.DesignerId != designer.DesignerId)
+            {
+                var OldJobActivity = (from r in _jobActivityRepository.GetAll() where r.DesignerId == designer.DesignerId && r.InquiryId == designer.InquiryId select r).ToList();
+                foreach (var data in OldJobActivity)
+                {
+                    data.DesignerId = input.DesignerId;
+                    await _jobActivityRepository.UpdateAsync(data);
+                }
+            }
+
             ObjectMapper.Map(input, query);
             await _LeadDetailRepository.UpdateAsync(query);
         }

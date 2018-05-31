@@ -9,6 +9,7 @@ namespace tibs.stem.Inquirys.Dto
     public class RecentInquiryInput
     {
         public virtual string TeamId { get; set; }
+        public virtual string SalesId { get; set; }
     }
     public class RecentInquiryClosureList
     {

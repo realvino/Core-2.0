@@ -160,23 +160,14 @@ namespace tibs.stem.Tenants.Dashboard
 
         public async Task<Array> GetLostReasonGraph(GraphInput input)
         {
-            string sales = "No";
-            string team = "No";
-            if (input.Id.Contains(','))
-            {
-                team = input.Id.Remove(input.Id.Length - 1);
-            }
-            else
-            {
-                sales = input.Id;
-            }
+
             ConnectionAppService db = new ConnectionAppService();
             DataTable viewtable = new DataTable();
             using (SqlConnection con = new SqlConnection(db.ConnectionString()))
             {
                 SqlCommand sqlComm = new SqlCommand("spGraph_LostReasonGraph", con);
-                sqlComm.Parameters.AddWithValue("@UserId", sales);
-                sqlComm.Parameters.AddWithValue("@TeamId", team);
+                sqlComm.Parameters.AddWithValue("@UserId", input.UserId);
+                sqlComm.Parameters.AddWithValue("@TeamId", input.TeamId);
                 sqlComm.Parameters.AddWithValue("@StartDate", input.StartDate);
                 sqlComm.Parameters.AddWithValue("@EndDate", input.EndDate);
                 sqlComm.CommandType = CommandType.StoredProcedure;
@@ -197,23 +188,14 @@ namespace tibs.stem.Tenants.Dashboard
         }
         public async Task<Array> GetLeadSummaryGraph(GraphInput input)
         {
-            string sales = "No";
-            string team = "No";
-            if (input.Id.Contains(','))
-            {
-                team = input.Id.Remove(input.Id.Length - 1);
-            }
-            else
-            {
-                sales = input.Id;
-            }
+            
             ConnectionAppService db = new ConnectionAppService();
             DataTable viewtable = new DataTable();
             using (SqlConnection con = new SqlConnection(db.ConnectionString()))
             {
                 SqlCommand sqlComm = new SqlCommand("spGraph_LeadSummaryGraph", con);
-                sqlComm.Parameters.AddWithValue("@UserId", sales);
-                sqlComm.Parameters.AddWithValue("@TeamId", team);
+                sqlComm.Parameters.AddWithValue("@UserId", input.UserId);
+                sqlComm.Parameters.AddWithValue("@TeamId", input.TeamId);
                 sqlComm.Parameters.AddWithValue("@StartDate", input.StartDate);
                 sqlComm.Parameters.AddWithValue("@EndDate", input.EndDate);
                 sqlComm.CommandType = CommandType.StoredProcedure;
@@ -241,6 +223,8 @@ namespace tibs.stem.Tenants.Dashboard
             {
                 SqlCommand sqlComm = new SqlCommand("Sp_RecentClosureInquiry", con);
                 sqlComm.Parameters.AddWithValue("@TeamId", input.TeamId);
+                sqlComm.Parameters.AddWithValue("@SalesId", input.SalesId); 
+
                 sqlComm.CommandType = CommandType.StoredProcedure;
                 using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
                 {
@@ -280,6 +264,7 @@ namespace tibs.stem.Tenants.Dashboard
             using (SqlConnection con = new SqlConnection(db.ConnectionString()))
             {
                 SqlCommand sqlComm = new SqlCommand("Sp_RecentActivityInquiry", con);
+                sqlComm.Parameters.AddWithValue("@SalesId", input.SalesId);
                 sqlComm.Parameters.AddWithValue("@TeamId", input.TeamId);
                 sqlComm.CommandType = CommandType.StoredProcedure;
                 using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
@@ -329,9 +314,9 @@ namespace tibs.stem.Tenants.Dashboard
             var Datas = new List<SliderDataList>();
 
             string viewquery = "SELECT * FROM [dbo].[View_SliderUser]";
-            if (datainput.Length > 0)
+            if (string.IsNullOrEmpty(datainput) == false)
             {
-                    viewquery = viewquery + "  WHERE TeamId in("+ datainput + ")";
+                    viewquery = viewquery + "  WHERE TeamId in(0,"+ datainput + ")";
             }
 
             DataTable viewtable = new DataTable();
