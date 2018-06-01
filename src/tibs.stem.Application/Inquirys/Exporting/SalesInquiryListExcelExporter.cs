@@ -28,6 +28,8 @@ namespace tibs.stem.Inquirys.Exporting
                         L("DepartmentName"),
                         L("TeamName"),
                         L("AssignTo"),
+                        L("ClosureDate"),
+                        L("NextActivity"),
                         L("CreatedBy"),
                         L("CreationTime")
                         );
@@ -41,13 +43,15 @@ namespace tibs.stem.Inquirys.Exporting
                         _ => _.DepartmentName,
                         _ => _.TeamName,
                         _ => _.SalesMan,
+                        _ => _.SclosureDate,
+                        _ => _.SlastActivity,
                         _ => _.CreatedBy,
-                         _ => _.SCreationTime
+                        _ => _.SCreationTime
 
                         );
 
 
-                    for (var i = 1; i <= 9; i++)
+                    for (var i = 1; i <= 11; i++)
                     {
                         sheet.Column(i).AutoFit();
                     }

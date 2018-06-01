@@ -28,6 +28,8 @@ namespace tibs.stem.Inquirys.Exporting
                         L("Milestone"),
                         L("DepartmentName"),
                         L("TeamName"),
+                        L("ClosureDate"),
+                        L("NextActivity"),
                         L("CreatedBy"),
                         L("CreationTime")
                         );
@@ -40,13 +42,15 @@ namespace tibs.stem.Inquirys.Exporting
                         _ => _.MileStoneName,
                         _ => _.DepartmentName,
                         _ => _.TeamName,
+                        _ => _.SclosureDate,
+                        _ => _.SlastActivity,
                         _ => _.CreatedBy,
-                         _ => _.SCreationTime
+                        _ => _.SCreationTime
 
                         );
 
 
-                    for (var i = 1; i <= 8; i++)
+                    for (var i = 1; i <= 10; i++)
                     {
                         sheet.Column(i).AutoFit();
                     }

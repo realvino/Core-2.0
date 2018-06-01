@@ -2692,7 +2692,9 @@ namespace tibs.stem.Inquirys
                                CreatedBy = ur.UserName,
                                SCreationTime = a.CreationTime.ToString(),
                                SalesMan = pr.UserName,
-                               CreationTime = a.CreationTime
+                               CreationTime = a.CreationTime,
+                               SclosureDate = enqDetail.ClosureDate != null ? enqDetail.ClosureDate.ToString() : "",
+                               SlastActivity = enqDetail.LastActivity != null ? enqDetail.LastActivity.ToString() : ""
 
                            });
             var inquirys = await inquiry
@@ -3792,6 +3794,8 @@ namespace tibs.stem.Inquirys
                                  TeamName = enqDetail.TeamId != null ? enqDetail.Team.Name : "",
                                  CreatedBy = ur.UserName,
                                  SCreationTime = a.CreationTime.ToString(),
+                                 SclosureDate = enqDetail.ClosureDate != null ? enqDetail.ClosureDate.ToString() : "",
+                                 SlastActivity = enqDetail.LastActivity != null ? enqDetail.LastActivity.ToString() : ""
 
                              });
 
@@ -3884,7 +3888,7 @@ namespace tibs.stem.Inquirys
                                Submitted = r.Submitted,
                                InquiryId = r.InquiryId,
                                InquiryName = r.InquiryId != null ? r.Inquiry.Name : "",
-                               DesignerName = d.DesignerId != null ? d.Designers.Name : ""
+                               DesignerName = d.DesignerId != null ? d.Designers.Name : "",
 
                            }).ToList();
 

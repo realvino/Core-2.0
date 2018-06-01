@@ -44,6 +44,7 @@ using tibs.stem.Dto;
 using tibs.stem.Authorization.Users;
 using tibs.stem.AcitivityTracks;
 using tibs.stem.Inquirys.Dto;
+using tibs.stem.Views;
 
 namespace tibs.stem.Quotationss
 {
@@ -78,7 +79,8 @@ namespace tibs.stem.Quotationss
         private List<QuotationReportListDto> inquirylistdto;
         private readonly IUserEmailer _userEmailer;
         private readonly IRepository<AcitivityTrack> _acitivityTrackRepository;
-
+        private readonly IQuotationInquiryFilterListExcelExporter _QuotationInquiryFilterListExcelExporter;
+        private readonly IRepository<View> _ViewRepository;
         public QuotationAppService(
             IRepository<Quotation> quotationRepository,
             IRepository<NewCompany> newCompanyRepository,
@@ -106,6 +108,8 @@ namespace tibs.stem.Quotationss
             IRepository<EnquiryDetail> enquiryDetailRepository,
             IRepository<Teams> TeamRepository,
             IRepository<TeamDetail> TeamDetailRepository,
+            IQuotationInquiryFilterListExcelExporter QuotationInquiryFilterListExcelExporter,
+            IRepository<View> ViewRepository,
             IRepository<TemporaryProductImage> TempProductImageRepository
             )
         {
@@ -137,6 +141,8 @@ namespace tibs.stem.Quotationss
             _quotationListExcelExporter = quotationListExcelExporter;
             _userEmailer = userEmailer;
             _acitivityTrackRepository = acitivityTrackRepository;
+            _QuotationInquiryFilterListExcelExporter = QuotationInquiryFilterListExcelExporter;
+            _ViewRepository = ViewRepository;
         }
         public async Task<PagedResultDto<QuotationListDto>> GetQuotation(GetQuotationInput input)
         {
@@ -1790,510 +1796,6 @@ namespace tibs.stem.Quotationss
             }
 
         }
-
-        //public async Task<PagedResultDto<QuotationReportListDto>> GetTeamEnquiryReport(QuotationReportInput input)
-        //{
-        //    var inquirycount = 0;
-        //    DateTime currentdate = DateTime.Now;
-        //    var currentmonth = new DateTime(currentdate.Year, currentdate.Month, 1);
-        //    var currentyear = currentmonth.AddYears(1);
-        //    var listmonths = Enumerable.Range(0, 12).Select(m => currentmonth.AddMonths(m)).ToArray();
-        //    var query = _enquiryDetailRepository.GetAll().Where(p => p.AssignedbyId == input.SalesId && p.ClosureDate >= currentmonth && p.ClosureDate < currentyear);
-        //    try
-        //    {
-        //        var inqwdet = (from r in query
-        //                       join enq in _inquiryRepository.GetAll().Where(p => p.Won != true && p.Junk != true) on r.InquiryId equals enq.Id
-        //                       select new QuotationReportListDto
-        //                       {
-        //                           Date = r.CreationTime.ToString("dd-MMM-yy"),
-        //                           InquiryName = r.InquiryId > 0 ? r.Inquirys.Name : "",
-        //                           Status = "Ongoing",
-        //                           CompanyName = enq.Companys.Name ?? "",
-        //                           QuotationId = 0,
-        //                           InquiryId = enq.Id,
-        //                           ClosureDate = r.ClosureDate != null ? r.ClosureDate : null,
-        //                           AccountManager = r.AssignedbyId > 0 ? r.AbpAccountManager.UserName : "",
-        //                           NewOrExisting = enq.Companys.NewCustomerTypes.Title ?? "",
-        //                           Location = enq.LocationId > 0 ? enq.Locations.LocationName : "",
-        //                           AEDValue = Math.Round(r.EstimationValue),
-        //                           Stage = "New",
-        //                           Percentage = 0,
-        //                           WeightedAED = 0,
-        //                           Total1Value = 0,
-        //                           Total2Value = 0,
-        //                           Total3Value = 0,
-        //                           Total4Value = 0,
-        //                           Total5Value = 0,
-        //                           Total6Value = 0,
-        //                           Total7Value = 0,
-        //                           Total8Value = 0,
-        //                           Total9Value = 0,
-        //                           Total10Value = 0,
-        //                           Total11Value = 0,
-        //                           Total12Value = 0,
-        //                           Total1ValueFormat = listmonths[0].ToString("MMM-yyyy"),
-        //                           Total2ValueFormat = listmonths[1].ToString("MMM-yyyy"),
-        //                           Total3ValueFormat = listmonths[2].ToString("MMM-yyyy"),
-        //                           Total4ValueFormat = listmonths[3].ToString("MMM-yyyy"),
-        //                           Total5ValueFormat = listmonths[4].ToString("MMM-yyyy"),
-        //                           Total6ValueFormat = listmonths[5].ToString("MMM-yyyy"),
-        //                           Total7ValueFormat = listmonths[6].ToString("MMM-yyyy"),
-        //                           Total8ValueFormat = listmonths[7].ToString("MMM-yyyy"),
-        //                           Total9ValueFormat = listmonths[8].ToString("MMM-yyyy"),
-        //                           Total10ValueFormat = listmonths[9].ToString("MMM-yyyy"),
-        //                           Total11ValueFormat = listmonths[10].ToString("MMM-yyyy"),
-        //                           Total12ValueFormat = listmonths[11].ToString("MMM-yyyy"),
-        //                           ActionDate = r.LastActivity != null ? r.LastActivity.ToString() : "",
-        //                           Notes = r.Inquirys.Remarks ?? ""
-
-        //                       });
-
-        //        inquirycount = await inqwdet.CountAsync();
-
-        //        var inquirylist = await inqwdet
-        //                .OrderBy(p => p.Date)
-        //                .PageBy(input)
-        //                .ToListAsync();
-
-        //        inquirylistdto = inquirylist.MapTo<List<QuotationReportListDto>>();
-        //    }
-        //    catch (Exception ex)
-        //    {
-
-        //    }
-        //    try
-        //    {
-        //        foreach (var item in inquirylistdto)
-        //        {
-        //            var InqQuot = (from q in _quotationRepository.GetAll() where q.InquiryId == item.InquiryId && q.IsClosed != true && q.Archieved != true && q.Void != true && q.Revised != true && q.Total > 0 select q).ToArray();
-        //            if (InqQuot.Length > 0)
-        //            {
-        //                var maxqut = (_quotationRepository.GetAll().Where(r => r.InquiryId == item.InquiryId && r.IsClosed != true && r.Archieved != true && r.Void != true && r.Revised != true && r.Total > 0).Max(r => r.StageId));
-        //                var qut = (_quotationRepository.GetAll().Where(r => r.InquiryId == item.InquiryId && r.StageId == maxqut && r.IsClosed != true && r.Archieved != true && r.Revised != true && r.Void != true && r.Total > 0))
-        //                            .OrderBy(p => p.Total).FirstOrDefault();
-        //                var enst = _enqStatusRepository.GetAll().Where(r => r.Id == qut.StageId).FirstOrDefault();
-        //                decimal perc = Convert.ToDecimal(enst.Percentage);
-        //                decimal total = Math.Round(Convert.ToDecimal(qut.Total));
-        //                item.AEDValue = qut.Total;
-        //                item.WeightedAED = Math.Round(perc * total / 100);
-        //                item.Stage = qut.EnqStatus.EnqStatusName;
-        //                item.Percentage = perc;
-        //            }
-        //            else
-        //            {
-        //                var lead = _LeadDetailRepository.GetAll().Where(r => r.InquiryId == item.InquiryId).FirstOrDefault();
-        //                if (lead != null)
-        //                {
-        //                    if (lead.EstimationValue != null)
-        //                    {
-        //                        var data = Math.Round(Convert.ToDecimal(lead.EstimationValue));
-        //                        item.AEDValue = data;
-        //                        if (item.Percentage > 0)
-        //                        {
-        //                            item.WeightedAED = Math.Round(item.Percentage * data / 100);
-        //                        }
-
-        //                    }
-        //                }
-
-        //            }
-
-        //            var InquiryDetailClosureDate = item.ClosureDate;
-        //            if (InquiryDetailClosureDate != null)
-        //            {
-        //                var Month = InquiryDetailClosureDate.GetValueOrDefault().ToString("MMM-yyyy");
-        //                if (listmonths[0].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total1Value = Math.Round(item.WeightedAED);
-        //                }
-        //                else if (listmonths[1].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total2Value = Math.Round(item.WeightedAED);
-        //                }
-        //                else if (listmonths[2].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total3Value = Math.Round(item.WeightedAED);
-        //                }
-        //                else if (listmonths[3].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total4Value = Math.Round(item.WeightedAED);
-        //                }
-        //                else if (listmonths[4].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total5Value = Math.Round(item.WeightedAED);
-        //                }
-        //                else if (listmonths[5].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total6Value = Math.Round(item.WeightedAED);
-        //                }
-        //                else if (listmonths[6].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total7Value = Math.Round(item.WeightedAED);
-        //                }
-        //                else if (listmonths[7].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total8Value = Math.Round(item.WeightedAED);
-        //                }
-        //                else if (listmonths[8].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total9Value = Math.Round(item.WeightedAED);
-        //                }
-        //                else if (listmonths[9].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total10Value = Math.Round(item.WeightedAED);
-        //                }
-        //                else if (listmonths[10].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total11Value = Math.Round(item.WeightedAED);
-        //                }
-        //                else if (listmonths[11].ToString("MMM-yyyy") == Month)
-        //                {
-        //                    item.Total12Value = Math.Round(item.WeightedAED);
-        //                }
-        //            }
-
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-
-        //        throw;
-        //    }
-
-
-        //    return new PagedResultDto<QuotationReportListDto>(inquirycount, inquirylistdto);
-        //}
-
-        //public async Task<PagedResultDto<TeamReportListDto>> GetTeamReport(TeamReportInput input)
-        //{
-        //    var query = _TeamDetailRepository.GetAll().Where(p => p.TeamId == input.TeamId);
-
-        //    DateTime currentdate = DateTime.Now;
-        //    var currentmonth = new DateTime(currentdate.Year, currentdate.Month, 1);
-        //    var currentyear = currentmonth.AddYears(1);
-        //    var listmonths = Enumerable.Range(0, 12).Select(m => currentmonth.AddMonths(m)).ToArray();
-
-        //    var reg = (from r in query
-        //               select new TeamReportListDto
-        //               {
-        //                   TeamName = r.Team.Name ?? "",
-        //                   AccountManager = r.Salesman.UserName ?? "",
-        //                   AccountManagerId = r.SalesmanId,
-        //                   TotalAEDValue = 0,
-        //                   TeamId = (int)(r.TeamId ?? 0),
-        //                   TotalWeightedAED = 0,
-        //                   Total1Value = 0,
-        //                   Total2Value = 0,
-        //                   Total3Value = 0,
-        //                   Total4Value = 0,
-        //                   Total5Value = 0,
-        //                   Total6Value = 0,
-        //                   Total7Value = 0,
-        //                   Total8Value = 0,
-        //                   Total9Value = 0,
-        //                   Total10Value = 0,
-        //                   Total11Value = 0,
-        //                   Total12Value = 0,
-        //                   Total1ValueFormat = listmonths[0].ToString("MMM-yyyy"),
-        //                   Total2ValueFormat = listmonths[1].ToString("MMM-yyyy"),
-        //                   Total3ValueFormat = listmonths[2].ToString("MMM-yyyy"),
-        //                   Total4ValueFormat = listmonths[3].ToString("MMM-yyyy"),
-        //                   Total5ValueFormat = listmonths[4].ToString("MMM-yyyy"),
-        //                   Total6ValueFormat = listmonths[5].ToString("MMM-yyyy"),
-        //                   Total7ValueFormat = listmonths[6].ToString("MMM-yyyy"),
-        //                   Total8ValueFormat = listmonths[7].ToString("MMM-yyyy"),
-        //                   Total9ValueFormat = listmonths[8].ToString("MMM-yyyy"),
-        //                   Total10ValueFormat = listmonths[9].ToString("MMM-yyyy"),
-        //                   Total11ValueFormat = listmonths[10].ToString("MMM-yyyy"),
-        //                   Total12ValueFormat = listmonths[11].ToString("MMM-yyyy"),
-        //               });
-
-        //    var teamDetailCount = await reg.CountAsync();
-
-        //    var teamDetaillist = await reg
-        //            .PageBy(input)
-        //            .ToListAsync();
-
-        //    var TeamDetailListDtos = teamDetaillist.MapTo<List<TeamReportListDto>>();
-        //    try
-        //    {
-
-        //        foreach (var salesman in TeamDetailListDtos)
-        //        {
-        //            var SalesmanId = (from u in UserManager.Users where u.UserName == salesman.AccountManager select u.Id).FirstOrDefault();
-        //            var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.AssignedbyId == SalesmanId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Won != true && p.Junk != true) on t.InquiryId equals enq.Id select t).ToArray();
-        //            decimal salesmanaedvalue = 0;
-        //            decimal salesmanweightvalue = 0;
-        //            if (enqDetail.Length > 0)
-        //            {
-        //                foreach (var item in enqDetail)
-        //                {
-        //                    var InqQuot = (from q in _quotationRepository.GetAll() where q.InquiryId == item.InquiryId && q.IsClosed != true && q.Archieved != true && q.Void != true && q.Revised != true && q.Total > 0 select q).ToArray();
-        //                    decimal qutsalesmanaedvalue = Math.Round(item.EstimationValue);
-        //                    decimal qutsalesmanweightvalue = 0;
-        //                    if (InqQuot.Length > 0)
-        //                    {
-        //                        var maxqut = (_quotationRepository.GetAll().Where(r => r.InquiryId == item.InquiryId && r.IsClosed != true && r.Archieved != true && r.Void != true && r.Revised != true && r.Total > 0).Max(r => r.StageId));
-        //                        var qut = (_quotationRepository.GetAll().Where(r => r.InquiryId == item.InquiryId && r.StageId == maxqut && r.IsClosed != true && r.Archieved != true && r.Revised != true && r.Void != true && r.Total > 0))
-        //                                    .OrderBy(p => p.Total).FirstOrDefault();
-        //                        var enst = _enqStatusRepository.GetAll().Where(r => r.Id == qut.StageId).FirstOrDefault();
-        //                        decimal perc = Convert.ToDecimal(enst.Percentage);
-        //                        decimal total = Convert.ToDecimal(qut.Total);
-        //                        qutsalesmanaedvalue = Math.Round(total);
-        //                        qutsalesmanweightvalue = Math.Round(perc * total / 100);
-        //                    }
-        //                    else
-        //                    {
-        //                        var lead = _LeadDetailRepository.GetAll().Where(r => r.InquiryId == item.InquiryId).FirstOrDefault();
-        //                        if (lead != null)
-        //                        {
-        //                            if (lead.EstimationValue != null)
-        //                            {
-        //                                qutsalesmanaedvalue = Math.Round(Convert.ToDecimal(lead.EstimationValue));
-        //                            }
-        //                        }
-        //                    }
-        //                    salesmanaedvalue = salesmanaedvalue + qutsalesmanaedvalue;
-        //                    salesmanweightvalue = salesmanweightvalue + qutsalesmanweightvalue;
-        //                    var InquiryDetailClosureDate = item.ClosureDate;
-        //                    if (InquiryDetailClosureDate != null)
-        //                    {
-        //                        var Month = InquiryDetailClosureDate.GetValueOrDefault().ToString("MMM-yyyy");
-        //                        if (listmonths[0].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total1Value = Math.Round(Convert.ToDecimal(salesman.Total1Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[1].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total2Value = Math.Round(Convert.ToDecimal(salesman.Total2Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[2].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total3Value = Math.Round(Convert.ToDecimal(salesman.Total3Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[3].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total4Value = Math.Round(Convert.ToDecimal(salesman.Total4Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[4].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total5Value = Math.Round(Convert.ToDecimal(salesman.Total5Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[5].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total6Value = Math.Round(Convert.ToDecimal(salesman.Total6Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[6].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total7Value = Math.Round(Convert.ToDecimal(salesman.Total7Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[7].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total8Value = Math.Round(Convert.ToDecimal(salesman.Total8Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[8].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total9Value = Math.Round(Convert.ToDecimal(salesman.Total9Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[9].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total10Value = Math.Round(Convert.ToDecimal(salesman.Total10Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[10].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total11Value = Math.Round(Convert.ToDecimal(salesman.Total11Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[11].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            salesman.Total12Value = Math.Round(Convert.ToDecimal(salesman.Total12Value + qutsalesmanweightvalue));
-        //                        }
-
-        //                    }
-        //                }
-        //            }
-        //            salesman.TotalAEDValue = Math.Round(salesmanaedvalue);
-        //            salesman.TotalWeightedAED = Math.Round(salesmanweightvalue);
-
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-
-        //    }
-        //    return new PagedResultDto<TeamReportListDto>(teamDetailCount, TeamDetailListDtos);
-        //}
-
-        //public async Task<PagedResultDto<TeamReportListDto>> GetAllTeamReport(TeamReportInput input)
-        //{
-        //    var query = _TeamRepository.GetAll();
-        //    DateTime currentdate = DateTime.Now;
-        //    var currentmonth = new DateTime(currentdate.Year, currentdate.Month, 1);
-        //    var currentyear = currentmonth.AddYears(1);
-        //    var listmonths = Enumerable.Range(0, 12).Select(m => currentmonth.AddMonths(m)).ToArray();
-        //    if (input.TeamId > 0)
-        //    {
-        //        query = _TeamRepository.GetAll().Where(p => p.Id == input.TeamId);
-        //    }
-
-        //    query = query
-        //        .WhereIf(
-        //        !input.Filter.IsNullOrWhiteSpace(),
-        //        u =>
-        //            u.Name.Contains(input.Filter)
-        //            );
-
-        //    var reg = (from r in query
-        //               select new TeamReportListDto
-        //               {
-        //                   TeamName = r.Name,
-        //                   TeamId = r.Id,
-        //                   AccountManager = "",
-        //                   TotalAEDValue = 0,
-        //                   TotalWeightedAED = 0,
-        //                   Total1Value = 0,
-        //                   Total2Value = 0,
-        //                   Total3Value = 0,
-        //                   Total4Value = 0,
-        //                   Total5Value = 0,
-        //                   Total6Value = 0,
-        //                   Total7Value = 0,
-        //                   Total8Value = 0,
-        //                   Total9Value = 0,
-        //                   Total10Value = 0,
-        //                   Total11Value = 0,
-        //                   Total12Value = 0,
-        //                   Total1ValueFormat = listmonths[0].ToString("MMM-yyyy"),
-        //                   Total2ValueFormat = listmonths[1].ToString("MMM-yyyy"),
-        //                   Total3ValueFormat = listmonths[2].ToString("MMM-yyyy"),
-        //                   Total4ValueFormat = listmonths[3].ToString("MMM-yyyy"),
-        //                   Total5ValueFormat = listmonths[4].ToString("MMM-yyyy"),
-        //                   Total6ValueFormat = listmonths[5].ToString("MMM-yyyy"),
-        //                   Total7ValueFormat = listmonths[6].ToString("MMM-yyyy"),
-        //                   Total8ValueFormat = listmonths[7].ToString("MMM-yyyy"),
-        //                   Total9ValueFormat = listmonths[8].ToString("MMM-yyyy"),
-        //                   Total10ValueFormat = listmonths[9].ToString("MMM-yyyy"),
-        //                   Total11ValueFormat = listmonths[10].ToString("MMM-yyyy"),
-        //                   Total12ValueFormat = listmonths[11].ToString("MMM-yyyy"),
-
-        //               });
-
-        //    var teamCount = await reg.CountAsync();
-
-        //    var teamlist = await reg
-        //            .PageBy(input)
-        //            .ToListAsync();
-
-        //    var TeamListDtos = teamlist.MapTo<List<TeamReportListDto>>();
-
-        //    foreach (var team in TeamListDtos)
-        //    {
-        //        var TeamId = (from p in _TeamRepository.GetAll() where p.Name == team.TeamName select p.Id).FirstOrDefault();
-        //        var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.TeamId == TeamId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Won != true && p.Junk != true) on t.InquiryId equals enq.Id select t).ToArray();
-        //        decimal teamaedvalue = 0;
-        //        decimal teamweightvalue = 0;
-        //        if (enqDetail.Length > 0)
-        //        {
-        //            foreach (var item in enqDetail)
-        //            {
-
-        //                try
-        //                {
-        //                    var InqQuot = (from q in _quotationRepository.GetAll() where q.InquiryId == item.InquiryId && q.IsClosed != true && q.Archieved != true && q.Void != true && q.Revised != true && q.Total > 0 select q).ToArray();
-        //                    decimal qutsalesmanaedvalue = Math.Round(item.EstimationValue);
-        //                    decimal qutsalesmanweightvalue = 0;
-        //                    if (InqQuot.Length > 0)
-        //                    {
-        //                        var maxqut = (_quotationRepository.GetAll().Where(r => r.InquiryId == item.InquiryId && r.IsClosed != true && r.Archieved != true && r.Void != true && r.Revised != true && r.Total > 0).Max(r => r.StageId));
-        //                        var qut = (_quotationRepository.GetAll().Where(r => r.InquiryId == item.InquiryId && r.StageId == maxqut && r.IsClosed != true && r.Archieved != true && r.Revised != true && r.Void != true && r.Total > 0))
-        //                                    .OrderBy(p => p.Total).FirstOrDefault();
-        //                        var enst = _enqStatusRepository.GetAll().Where(r => r.Id == qut.StageId).FirstOrDefault();
-        //                        decimal perc = Convert.ToDecimal(enst.Percentage);
-        //                        decimal total = Convert.ToDecimal(qut.Total);
-        //                        qutsalesmanaedvalue = Math.Round(total);
-        //                        qutsalesmanweightvalue = Math.Round(perc * total / 100);
-        //                    }
-        //                    else
-        //                    {
-        //                        var lead = _LeadDetailRepository.GetAll().Where(r => r.InquiryId == item.InquiryId).FirstOrDefault();
-        //                        if (lead != null)
-        //                        {
-        //                            if (lead.EstimationValue != null)
-        //                            {
-        //                                qutsalesmanaedvalue = Math.Round(Convert.ToDecimal(lead.EstimationValue));
-        //                            }
-        //                        }
-        //                    }
-        //                    teamaedvalue = teamaedvalue + qutsalesmanaedvalue;
-        //                    teamweightvalue = teamweightvalue + qutsalesmanweightvalue;
-        //                    var InquiryDetailClosureDate = item.ClosureDate;
-        //                    if (InquiryDetailClosureDate != null)
-        //                    {
-        //                        var Month = InquiryDetailClosureDate.GetValueOrDefault().ToString("MMM-yyyy");
-        //                        if (listmonths[0].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total1Value = Math.Round(Convert.ToDecimal(team.Total1Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[1].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total2Value = Math.Round(Convert.ToDecimal(team.Total2Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[2].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total3Value = Math.Round(Convert.ToDecimal(team.Total3Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[3].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total4Value = Math.Round(Convert.ToDecimal(team.Total4Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[4].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total5Value = Math.Round(Convert.ToDecimal(team.Total5Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[5].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total6Value = Math.Round(Convert.ToDecimal(team.Total6Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[6].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total7Value = Math.Round(Convert.ToDecimal(team.Total7Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[7].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total8Value = Math.Round(Convert.ToDecimal(team.Total8Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[8].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total9Value = Math.Round(Convert.ToDecimal(team.Total9Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[9].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total10Value = Math.Round(Convert.ToDecimal(team.Total10Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[10].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total11Value = Math.Round(Convert.ToDecimal(team.Total11Value + qutsalesmanweightvalue));
-        //                        }
-        //                        else if (listmonths[11].ToString("MMM-yyyy") == Month)
-        //                        {
-        //                            team.Total12Value = Math.Round(Convert.ToDecimal(team.Total12Value + qutsalesmanweightvalue));
-        //                        }
-
-        //                    }
-        //                }
-        //                catch (Exception ex)
-        //                {
-
-        //                }
-
-        //            }
-        //        }
-        //        team.TotalAEDValue = Math.Round(teamaedvalue);
-        //        team.TotalWeightedAED = Math.Round(teamweightvalue);
-        //    }
-
-        //    return new PagedResultDto<TeamReportListDto>(teamCount, TeamListDtos);
-
-        //}
         public async Task OverAllApproveQuote(NullableIdDto input)
         {
             ConnectionAppService db = new ConnectionAppService();
@@ -2834,6 +2336,94 @@ namespace tibs.stem.Quotationss
             }
 
             return new PagedResultDto<TeamReportListDto>(teamCount, TeamListDtos);
+
+        }
+        public async Task<FileDto> GetQuotationInquiryFilterToExcel(NullableIdDto input)
+        {
+            var View = (from v in _ViewRepository.GetAll() where v.Id == input.Id select v).FirstOrDefault();
+
+            List<string> RemovedColumns = new List<string>();
+
+            if (View.Query != null)
+            {
+                RemovedColumns = View.Query.Split(',').ToList<string>();
+            }
+
+            ConnectionAppService db = new ConnectionAppService();
+            DataTable dt = new DataTable();
+            using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+            {
+                SqlCommand sqlComm = new SqlCommand("Sp_GetQuotationInquiryFilter", con);
+                sqlComm.Parameters.AddWithValue("@Id", input.Id);
+                sqlComm.Parameters.AddWithValue("@QuotationCreateBy", null);
+                sqlComm.Parameters.AddWithValue("@QuotationStatus", null);
+                sqlComm.Parameters.AddWithValue("@Salesman", null);
+                sqlComm.Parameters.AddWithValue("@InquiryCreateBy", null);
+                sqlComm.Parameters.AddWithValue("@PotentialCustomer", null);
+                sqlComm.Parameters.AddWithValue("@MileStoneName", null);
+                sqlComm.Parameters.AddWithValue("@EnquiryStatus", null);
+                sqlComm.Parameters.AddWithValue("@TeamName", null);
+                sqlComm.Parameters.AddWithValue("@Coordinator", null);
+                sqlComm.Parameters.AddWithValue("@Designer", null);
+                sqlComm.Parameters.AddWithValue("@DesignationName", null);
+                sqlComm.Parameters.AddWithValue("@Emirates", null);
+                sqlComm.Parameters.AddWithValue("@DepatmentName ", null);
+                sqlComm.Parameters.AddWithValue("@Categories", null);
+                sqlComm.Parameters.AddWithValue("@Status", null);
+                sqlComm.Parameters.AddWithValue("@WhyBafco", null);
+                sqlComm.Parameters.AddWithValue("@Probability", null);
+                sqlComm.Parameters.AddWithValue("@InquiryCreation", null);
+                sqlComm.Parameters.AddWithValue("@QuotationCreation", null);
+                sqlComm.Parameters.AddWithValue("@ClosureDate", null);
+                sqlComm.Parameters.AddWithValue("@LastActivityDate", null);
+                sqlComm.Parameters.AddWithValue("@QtnDateFilterId", 0);
+                sqlComm.Parameters.AddWithValue("@ClsDateFilterId", 0);
+                sqlComm.Parameters.AddWithValue("@LastActDateFilterId", 0);
+                sqlComm.CommandType = CommandType.StoredProcedure;
+                using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                {
+                    da.Fill(dt);
+                }
+
+                var Listdto = (from DataRow dr in dt.Rows
+                               select new QuotationInquiryFilter
+                               {
+                                   QuotationRefNo = Convert.ToString(dr["REFNO"]),
+                                   QuotationCreation = Convert.ToString(dr["QCreationTime"]),
+                                   QuotationCreateBy = Convert.ToString(dr["QCreator"]),
+                                   QuotationStatus = Convert.ToString(dr["QuotationStatus"]),
+                                   Salesman = Convert.ToString(dr["Sales"]),
+                                   QuotationValue = Convert.ToString(dr["Total"].ToString()),
+                                   TitleOfInquiry = Convert.ToString(dr["Name"]),
+                                   InquiryRefNo = Convert.ToString(dr["Submission"]),
+                                   InquiryCreation = Convert.ToString(dr["ICreationTime"]),
+                                   InquiryCreateBy = Convert.ToString(dr["Creator"]),
+                                   PotentialCustomer = Convert.ToString(dr["Company"]),
+                                   Email = Convert.ToString(dr["Email"]),
+                                   MobileNumber = Convert.ToString(dr["MBNO"]),
+                                   MileStoneName = Convert.ToString(dr["Milestone"]),
+                                   EnquiryStatus = Convert.ToString(dr["Status"]),
+                                   Total = Convert.ToString(dr["Estimation"].ToString()),
+                                   TeamName = Convert.ToString(dr["Team"]),
+                                   Coordinator = Convert.ToString(dr["Coordinator"]),
+                                   Designer = Convert.ToString(dr["Designer"]),
+                                   DesignationName = Convert.ToString(dr["Designation"]),
+                                   Emirates = Convert.ToString(dr["Location"]),
+                                   DepatmentName = Convert.ToString(dr["Depatment"]),
+                                   ClosureDate = Convert.ToString(dr["ClosureDate"]),
+                                   LastActivity = Convert.ToString(dr["LastActivity"]),
+                                   Probability = Convert.ToString(dr["Percentage"]),
+                                   AreaName = Convert.ToString(dr["Area"]),
+                                   BuildingName = Convert.ToString(dr["Building"]),
+                                   Categories = Convert.ToString(dr["LeadType"]),
+                                   Status = Convert.ToString(dr["Status"]),
+                                   WhyBafco = Convert.ToString(dr["Whybafco"])
+                               });
+
+                var QuotationListDtos = Listdto.MapTo<List<QuotationInquiryFilter>>();
+
+                return _QuotationInquiryFilterListExcelExporter.ExportToFile(QuotationListDtos, View.Name, RemovedColumns);
+            }
 
         }
     }

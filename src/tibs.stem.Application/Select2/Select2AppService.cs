@@ -2499,6 +2499,6 @@ namespace tibs.stem.Select2
         public int Id { get; set; }
         public string Name { get; set; }
         public string Photo { get; set; }
-
+        public bool IsSales { get; set; }
     }
 }

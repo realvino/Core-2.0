@@ -39,6 +39,8 @@ namespace tibs.stem.Quotationss
         Task<FileDto> GetQuotationToExcel();
         Task<PagedResultDto<QuotationReportListDto>> GetTeamEnquiryReport(QuotationReportInput input);
         Task SendDiscountMail(NullableIdDto input);
+        Task<FileDto> GetQuotationInquiryFilterToExcel(NullableIdDto input);
+
     }
 
 }

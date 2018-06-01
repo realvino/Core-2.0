@@ -1,10 +1,12 @@
 ﻿using Abp.Application.Services.Dto;
 using Abp.Auditing;
 using Abp.Authorization;
+using Abp.Authorization.Users;
 using Abp.AutoMapper;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.UI;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,7 +14,9 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using tibs.stem.Authorization;
+using tibs.stem.Authorization.Roles;
 using tibs.stem.Discounts;
+using tibs.stem.EnquiryDetails;
 using tibs.stem.Inquirys.Dto;
 using tibs.stem.Select2;
 using tibs.stem.Team;
@@ -30,19 +34,27 @@ namespace tibs.stem.Tenants.Dashboard
         private readonly IRepository<TeamDetail> _TeamDetailRepository;
         private readonly IRepository<Teams> _TeamRepository;
         private readonly IWebUrlService _webUrlService;
+        private readonly IRepository<UserRole, long> _userRoleRepository;
+        private readonly RoleManager _roleManager;
+        private readonly IRepository<EnquiryDetail> _enquiryDetailRepository;
 
         public TenantDashboardAppService(
             IRepository<Discount> discountRepository,
             IRepository<TeamDetail> TeamDetailRepository,
             IRepository<Teams> TeamRepository,
-            IWebUrlService webUrlService
-            )
-        {
-            _discountRepository = discountRepository;
-            _TeamDetailRepository = TeamDetailRepository;
-            _TeamRepository = TeamRepository;
-            _webUrlService = webUrlService;
-        }
+            IRepository<UserRole, long> userRoleRepository,
+            RoleManager roleManager,
+            IWebUrlService webUrlService,
+            IRepository<EnquiryDetail> enquiryDetailRepository
+            ){
+                    _discountRepository = discountRepository;
+                    _TeamDetailRepository = TeamDetailRepository;
+                    _TeamRepository = TeamRepository;
+                    _webUrlService = webUrlService;
+                    _userRoleRepository = userRoleRepository;
+                    _roleManager = roleManager;
+                    _enquiryDetailRepository = enquiryDetailRepository;
+                }
 
         public GetMemberActivityOutput GetMemberActivity()
         {
@@ -245,7 +257,11 @@ namespace tibs.stem.Tenants.Dashboard
                                    CoordinatorImage = Convert.ToString(dr["CoordinatorImage"]),
                                    DesignerImage = Convert.ToString(dr["DesignerImage"]),
                                    LastActivity = Convert.ToDateTime(dr["LastActivity"]),
-                                   Company = Convert.ToString(dr["Company"])
+                                   Company = Convert.ToString(dr["Company"]),
+                                   Stage = Convert.ToString(dr["Stage"]),
+                                   Total = Convert.ToDecimal(dr["Total"]),
+                                   StageName = Convert.ToString(dr["StageName"]),
+                                   MileStone = Convert.ToString(dr["Milestone"])
                                }).ToList();
 
                 var SubListout = new RecentInquiryClosureList
@@ -286,7 +302,11 @@ namespace tibs.stem.Tenants.Dashboard
                                    CoordinatorImage = Convert.ToString(dr["CoordinatorImage"]),
                                    DesignerImage = Convert.ToString(dr["DesignerImage"]),
                                    LastActivity = Convert.ToDateTime(dr["LastActivity"]),
-                                   Company = Convert.ToString(dr["Company"])
+                                   Company = Convert.ToString(dr["Company"]),
+                                   Stage = Convert.ToString(dr["Stage"]),
+                                   Total = Convert.ToDecimal(dr["Total"]),
+                                   StageName = Convert.ToString(dr["StageName"]),
+                                   MileStone = Convert.ToString(dr["Milestone"])
                                });
 
                 var SubListout = new RecentInquiryActivityList
@@ -299,24 +319,19 @@ namespace tibs.stem.Tenants.Dashboard
                 return SubListout;
             }
         }
-        public List<SliderDataList> GetSalesExecutive(String datainput)
+        public List<SliderDataList> GetSalesExecutive(String datainput,bool IsSales)
         {
-            //string[] teamid = new string[] { };
-            //if (datainput != null)
-            //{
-            //    teamid = datainput.Split(',');
-            //    if (teamid.Length > 1)
-            //    {
-            //        teamid = teamid.Take(teamid.Length - 1).ToArray();
-            //    }
-            //}
-
             var Datas = new List<SliderDataList>();
 
             string viewquery = "SELECT * FROM [dbo].[View_SliderUser]";
-            if (string.IsNullOrEmpty(datainput) == false)
+
+            if (string.IsNullOrEmpty(datainput) == false && IsSales == false)
             {
                     viewquery = viewquery + "  WHERE TeamId in(0,"+ datainput + ")";
+            }
+            if (string.IsNullOrEmpty(datainput) == false && IsSales == true)
+            {
+                viewquery = viewquery + "  WHERE Id in(" + datainput + ")";
             }
 
             DataTable viewtable = new DataTable();
@@ -362,13 +377,68 @@ namespace tibs.stem.Tenants.Dashboard
         {
             SelectDResult sr = new SelectDResult();
             var team = (from r in _TeamRepository.GetAll() select r).ToArray();
-            if (team.Length > 0)
-            {
-                var teamlist = (from r in team join e in UserManager.Users on r.SalesManagerId equals e.Id select new datadtoes { Id = r.Id, Name = e.FullName + " " + "(" + r.Name + ")", Photo = _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + e.ProfilePictureUrl }).ToList();
-                //teamlist.Add(new datadtoes { Id = 1000, Name = "All", Photo = _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + "/Common/Profile/default-profile-picture.png" });
-                sr.selectDdata = teamlist.ToArray();
 
+            long userid = (int)AbpSession.UserId;
+            var userrole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
+
+            if (userrole.DisplayName == "Sales Manager" || userrole.DisplayName == "Sales Manager / Sales Executive")
+            {
+                team = (from r in _TeamRepository.GetAll() where r.SalesManagerId == userid select r).ToArray();
+                if (team.Length > 0)
+                {
+                    var teamlist = (from r in team
+                                    join e in UserManager.Users on r.SalesManagerId equals e.Id
+                                    select new datadtoes
+                                    {
+                                        Id = r.Id,
+                                        Name = e.FullName + " " + "(" + r.Name + ")",
+                                        Photo = _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + e.ProfilePictureUrl,
+                                        IsSales = false
+                                    }).ToList();
+                    sr.selectDdata = teamlist.ToArray();
+                }
             }
+            if (userrole.DisplayName == "Sales Executive")
+            {
+                team = (from r in _TeamRepository.GetAll()
+                        join c in _TeamDetailRepository.GetAll() on r.Id equals c.TeamId
+                        into cJoined from c in cJoined.DefaultIfEmpty()
+                        where c.SalesmanId == userid select r).ToArray();
+                if (team.Length > 0)
+                {
+                    var teamlist = (from r in team
+                                    join e in UserManager.Users on r.SalesManagerId equals e.Id
+                                    select new datadtoes
+                                    {
+                                        Id = (int)userid,
+                                        Name = e.FullName + " " + "(" + r.Name + ")",
+                                        Photo = _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + e.ProfilePictureUrl,
+                                        IsSales = true
+                                    }).ToList();
+                    sr.selectDdata = teamlist.ToArray();
+                }
+            }
+            else
+            {
+                if (team.Length > 0)
+                {
+                    var teamlist = (from r in team
+                                    join e in UserManager.Users on r.SalesManagerId equals e.Id
+                                    select new datadtoes
+                                    {
+                                        Id = r.Id,
+                                        Name = e.FullName + " " + "(" + r.Name + ")",
+                                        Photo = _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + e.ProfilePictureUrl,
+                                        IsSales = false
+                                    }).ToList();
+                    sr.selectDdata = teamlist.ToArray();
+                }
+            }
+           
             return sr;
         }
 

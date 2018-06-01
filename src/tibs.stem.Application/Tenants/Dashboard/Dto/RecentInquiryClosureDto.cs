@@ -36,6 +36,11 @@ namespace tibs.stem.Inquirys.Dto
         public virtual string DesignerImage { get; set; }
         public virtual DateTime LastActivity { get; set; }
         public virtual string Company { get; set; }
+        public virtual string StageName { get; set; }
+        public virtual string MileStone { get; set; }
+        public virtual decimal Total { get; set; }
+        public virtual string Stage { get; set; }
+
     }
 
 }

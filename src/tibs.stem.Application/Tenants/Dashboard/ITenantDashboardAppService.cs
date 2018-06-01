@@ -29,7 +29,7 @@ namespace tibs.stem.Tenants.Dashboard
         Task<Array> GetLostReasonGraph(GraphInput input);
         Task<RecentInquiryClosureList> GetInquiryRecentClosure(RecentInquiryInput input);
         Task<RecentInquiryActivityList> GetInquiryRecentActivity(RecentInquiryInput input);
-        List<SliderDataList> GetSalesExecutive(String datainput);
+        List<SliderDataList> GetSalesExecutive(String datainput, bool IsSales);
         Task<SelectDResult> GetDashboardTeam();
     }
 }

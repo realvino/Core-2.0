@@ -1041,15 +1041,6 @@
     <Content Include="wwwroot\Common\Images\TemporaryProduct\9\12.png" />
     <Content Include="wwwroot\Common\Images\TemporaryProduct\9\3.png" />
     <Content Include="wwwroot\Common\PDF\StandardPDF\StandardQuotationPDF_1018.pdf" />
-    <Content Include="wwwroot\Common\Profile\10.jpg" />
-    <Content Include="wwwroot\Common\Profile\11.jpg" />
-    <Content Include="wwwroot\Common\Profile\19.jpg" />
-    <Content Include="wwwroot\Common\Profile\21.jpg" />
-    <Content Include="wwwroot\Common\Profile\default-profile-picture.png" />
-    <Content Include="wwwroot\Common\Profile\leena.jpg" />
-    <Content Include="wwwroot\Common\Profile\neha.jpg" />
-    <Content Include="wwwroot\Common\Profile\raj.jpg" />
-    <Content Include="wwwroot\Common\Profile\yasmin.jpg" />
     <Content Include="wwwroot\swagger\ui\index.html" />
     <Content Include="wwwroot\Temp\Downloads\ReadMe.txt" />
   </ItemGroup>

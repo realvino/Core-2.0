@@ -918,5 +918,25 @@
     <text name="LockedQuote" value="Locked Quote" />
     <text name="LockedValue" value="Locked Value" />
     <text name="Probability" value="Probability" />
+  
+    <text name="Probability%" value="Probability %" />
+    <text name="QuotationRefNo" value="Quotation Ref No" />
+    <text name="OpportunityName" value="Opportunity Name" />
+    <text name="Designation" value="Designation" />
+    <text name="MobileNumber" value="MobileNumber" />
+    <text name="Stages" value="Stages" />
+    <text name="Designer" value="Designer" />
+    <text name="Co-Ordinato" value="Co-Ordinato" />
+    <text name="Categories" value="Categories" />
+    <text name="EstimationValue" value="Estimation Value" />
+    <text name="QuotationValue" value="Quotation Value" />
+    <text name="QuotationCreator" value="Quotation Creator" />
+    <text name="ClosureDate" value="Closure Date" />
+    <text name="NextActivityDate" value="Next Activity Date" />
+    <text name="CreationDate" value="Creation Date" />
+    <text name="Emirates" value="Emirates" />
+    <text name="AreaName" value="Area Name" />
+    <text name="BuildingName" value="Building Name" />
+    <text name="WhyBafco" value="WhyBafco" />
   </texts>
 </localizationDictionary>
