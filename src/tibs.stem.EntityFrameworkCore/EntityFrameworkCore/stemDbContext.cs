@@ -14,6 +14,7 @@ using tibs.stem.Chat;
 using tibs.stem.Citys;
 using tibs.stem.Collections;
 using tibs.stem.ColorCodes;
+using tibs.stem.ColorGraphs;
 using tibs.stem.Companies;
 using tibs.stem.CompanyContacts;
 using tibs.stem.Countrys;
@@ -164,6 +165,7 @@ namespace tibs.stem.EntityFrameworkCore
         public virtual DbSet<View> Views { get; set; }
         public virtual DbSet<ReportColumn> ReportColumns { get; set; }
         public virtual DbSet<DateFilter> DateFilters { get; set; }
+        public virtual DbSet<ColorGraph> ColorGraphs { get; set; }
         public stemDbContext(DbContextOptions<stemDbContext> options)
             : base(options)
         {

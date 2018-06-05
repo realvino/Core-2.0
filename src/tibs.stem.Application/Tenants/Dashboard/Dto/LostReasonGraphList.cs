@@ -10,12 +10,14 @@ namespace tibs.stem.Tenants.Dashboard.Dto
     {
         public string Reason { get; set; }
         public decimal Total { get; set; }
+        public string Color { get; set; }
     }
     public class GetLeadSummaryGraphList
     {
         public int StageId { get; set; }
         public string StageName { get; set; }
         public decimal Total { get; set; }
+        public string Color { get; set; }
     }
     public class GraphInput
     {

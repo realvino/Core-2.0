@@ -1849,12 +1849,12 @@ namespace tibs.stem.Quotationss
             try
             {
                 var inqwdet = (from r in query
-                               join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true) on r.InquiryId equals enq.Id
+                               join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true && p.IsClosed != true) on r.InquiryId equals enq.Id
                                select new QuotationReportListDto
                                {
                                    Date = r.CreationTime.ToString("dd-MMM-yy"),
                                    InquiryName = r.InquiryId > 0 ? r.Inquirys.Name : "",
-                                   Status = "Ongoing",
+                                   Status = enq.LeadStatusId > 0 ? enq.LeadStatuss.LeadStatusName : "",
                                    CompanyName = enq.Companys.Name ?? "",
                                    QuotationId = 0,
                                    InquiryId = enq.Id,

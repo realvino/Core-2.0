@@ -14,9 +14,10 @@ using tibs.stem.MultiTenancy.Payments;
 namespace tibs.stem.Migrations
 {
     [DbContext(typeof(stemDbContext))]
-    partial class stemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180601095845_add-ColorGraphs-Table")]
+    partial class addColorGraphsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")

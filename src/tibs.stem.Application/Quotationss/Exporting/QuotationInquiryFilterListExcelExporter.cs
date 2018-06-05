@@ -14,7 +14,7 @@ namespace tibs.stem.Quotationss.Exporting
         public FileDto ExportToFile(List<QuotationInquiryFilter> QuotationInquiryFilterList, string ViewName, List<string> RemovedColumns)
         {
             return CreateExcelPackage(
-                "ViewReport.xlsx",
+                ViewName+".xlsx",
                 excelPackage =>
                 {
                     var sheet = excelPackage.Workbook.Worksheets.Add(L(ViewName));

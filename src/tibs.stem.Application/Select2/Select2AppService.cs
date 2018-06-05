@@ -1694,7 +1694,7 @@ namespace tibs.stem.Select2
         {
 
             Select2Result sr = new Select2Result();
-            var src = (from c in _leadStatusRepository.GetAll() select c).ToArray();
+            var src = (from c in _leadStatusRepository.GetAll() where c.Id != 5 select c).ToArray();
 
             if (src.Length > 0)
             {

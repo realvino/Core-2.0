@@ -194,6 +194,7 @@ namespace tibs.stem.Tenants.Dashboard
                             {
                                 Reason = Convert.ToString(dr["Reason"]),
                                 Total = Convert.ToDecimal(dr["Total"]),
+                                Color = Convert.ToString(dr["Color"])
                             });
                 return data.ToArray();
             }
@@ -223,6 +224,7 @@ namespace tibs.stem.Tenants.Dashboard
                                 StageId = Convert.ToInt32(dr["EnqId"]),
                                 StageName = Convert.ToString(dr["EnqName"]),
                                 Total = Convert.ToDecimal(dr["Total"]),
+                                Color = Convert.ToString(dr["EnqColor"])
                             });
                 return data.ToArray();
             }

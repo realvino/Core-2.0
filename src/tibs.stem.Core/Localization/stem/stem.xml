@@ -926,7 +926,7 @@
     <text name="MobileNumber" value="MobileNumber" />
     <text name="Stages" value="Stages" />
     <text name="Designer" value="Designer" />
-    <text name="Co-Ordinato" value="Co-Ordinato" />
+    <text name="Co-Ordinator" value="Co-Ordinator" />
     <text name="Categories" value="Categories" />
     <text name="EstimationValue" value="Estimation Value" />
     <text name="QuotationValue" value="Quotation Value" />
@@ -938,5 +938,8 @@
     <text name="AreaName" value="Area Name" />
     <text name="BuildingName" value="Building Name" />
     <text name="WhyBafco" value="WhyBafco" />
+    <text name="NextActivity" value="Next Activity" />
+    <text name="OpportunityRefNo" value="Opportunity Ref No" />
+
   </texts>
 </localizationDictionary>

@@ -384,8 +384,8 @@ namespace tibs.stem.Inquirys
                 query = _inquiryRepository.GetAll().Where(p => p.MileStoneId > 3 && p.MileStones.IsQuotation == false && p.Junk == null && p.IsClosed != true);
 
             }
+            string[] formats = { "dd/MM/yyyy" };
 
-           
             var inquiry = (from a in query
                            join enqDetail in _enquiryDetailRepository.GetAll() on a.Id equals enqDetail.InquiryId
                            join ur in UserManager.Users on a.CreatorUserId equals ur.Id into urJoined
@@ -425,8 +425,8 @@ namespace tibs.stem.Inquirys
                                Won = a.Won,
                                CreationTime = a.CreationTime,
                                Lost = a.Lost,
-                               SclosureDate = enqDetail.ClosureDate != null ? enqDetail.ClosureDate.ToString() : "",
-                               SlastActivity = enqDetail.LastActivity != null ? enqDetail.LastActivity.ToString() : ""
+                               SclosureDate = enqDetail.ClosureDate.HasValue ? enqDetail.ClosureDate.Value.ToString("dd/MM/yyyy") : "<not scheduled>",
+                               SlastActivity = enqDetail.LastActivity.HasValue? enqDetail.LastActivity.Value.ToString("dd/MM/yyyy") : "<not scheduled>"
                            });
 
             inquiry = inquiry.WhereIf(
@@ -2693,8 +2693,8 @@ namespace tibs.stem.Inquirys
                                SCreationTime = a.CreationTime.ToString(),
                                SalesMan = pr.UserName,
                                CreationTime = a.CreationTime,
-                               SclosureDate = enqDetail.ClosureDate != null ? enqDetail.ClosureDate.ToString() : "",
-                               SlastActivity = enqDetail.LastActivity != null ? enqDetail.LastActivity.ToString() : ""
+                               SclosureDate = enqDetail.ClosureDate.HasValue ? enqDetail.ClosureDate.Value.ToString("dd/MM/yyyy") : "<not scheduled>",
+                               SlastActivity = enqDetail.LastActivity.HasValue ? enqDetail.LastActivity.Value.ToString("dd/MM/yyyy") : "<not scheduled>"
 
                            });
             var inquirys = await inquiry
@@ -3559,8 +3559,8 @@ namespace tibs.stem.Inquirys
                                  SalesMan = pr.UserName,
                                  IsClosed = a.IsClosed,
                                  IsReversable = true,
-                                 SclosureDate = enqDetail.ClosureDate != null ? enqDetail.ClosureDate.ToString() : "",
-                                 SlastActivity = enqDetail.LastActivity != null ? enqDetail.LastActivity.ToString() : ""
+                                 SclosureDate = enqDetail.ClosureDate.HasValue ? enqDetail.ClosureDate.Value.ToString("dd/MM/yyyy") : "<not scheduled>",
+                                 SlastActivity = enqDetail.LastActivity.HasValue ? enqDetail.LastActivity.Value.ToString("dd/MM/yyyy") : "<not scheduled>"
 
                              });
 
@@ -3794,8 +3794,8 @@ namespace tibs.stem.Inquirys
                                  TeamName = enqDetail.TeamId != null ? enqDetail.Team.Name : "",
                                  CreatedBy = ur.UserName,
                                  SCreationTime = a.CreationTime.ToString(),
-                                 SclosureDate = enqDetail.ClosureDate != null ? enqDetail.ClosureDate.ToString() : "",
-                                 SlastActivity = enqDetail.LastActivity != null ? enqDetail.LastActivity.ToString() : ""
+                                 SclosureDate = enqDetail.ClosureDate.HasValue ? enqDetail.ClosureDate.Value.ToString("dd/MM/yyyy") : "<not scheduled>",
+                                 SlastActivity = enqDetail.LastActivity.HasValue ? enqDetail.LastActivity.Value.ToString("dd/MM/yyyy") : "<not scheduled>"
 
                              });
 
