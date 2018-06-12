@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -76,7 +77,7 @@ namespace tibs.stem.Web.Controllers
             string header = string.Empty;
             var headerfinder = builder.GetFileProvider().GetFileInfo("Stdheader.html");
             string headerpath = headerfinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(headerpath))
+            using (StreamReader reader = new StreamReader(headerpath, System.Text.Encoding.UTF8))
             {
                 header = reader.ReadToEnd();
             }
@@ -141,7 +142,7 @@ namespace tibs.stem.Web.Controllers
             string body = string.Empty;
             var filefinder = builder.GetFileProvider().GetFileInfo("StdQuotation.html");
             string filepath = filefinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(filepath))
+            using (StreamReader reader = new StreamReader(filepath, System.Text.Encoding.UTF8))
             {
                 body = reader.ReadToEnd();
             }
@@ -328,7 +329,7 @@ namespace tibs.stem.Web.Controllers
             string footer = string.Empty;
             var footerfinder = builder.GetFileProvider().GetFileInfo("Stdfooter.html");
             string footerpath = footerfinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(footerpath))
+            using (StreamReader reader = new StreamReader(footerpath, System.Text.Encoding.UTF8))
             {
                 footer = reader.ReadToEnd();
             }
@@ -383,7 +384,7 @@ namespace tibs.stem.Web.Controllers
             string header = string.Empty;
             var headerfinder = builder.GetFileProvider().GetFileInfo("PhotoEmphasisHeader.html");
             string headerpath = headerfinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(headerpath))
+            using (StreamReader reader = new StreamReader(headerpath, System.Text.Encoding.UTF8))
             {
                 header = reader.ReadToEnd();
             }
@@ -444,7 +445,7 @@ namespace tibs.stem.Web.Controllers
             string body = string.Empty;
             var filefinder = builder.GetFileProvider().GetFileInfo("PhotoEmphasis.html");
             string filepath = filefinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(filepath))
+            using (StreamReader reader = new StreamReader(filepath, System.Text.Encoding.UTF8))
             {
                 body = reader.ReadToEnd();
             }
@@ -552,21 +553,29 @@ namespace tibs.stem.Web.Controllers
             string TotalString = converter.Convert(daet);
             body = body.Replace("{Amount_Words}", TotalString);
 
-            ConnectionAppService db = new ConnectionAppService();
-            DataTable ds = new DataTable();
-            using (SqlConnection conn = new SqlConnection(db.ConnectionString()))
+            try
             {
-                SqlCommand sqlComm = new SqlCommand("sp_ExportPhotoEmphasisPdf", conn);
-                sqlComm.Parameters.AddWithValue("@QuotationId", QuotationId);
-                sqlComm.CommandType = CommandType.StoredProcedure;
-
-                using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                ConnectionAppService db = new ConnectionAppService();
+                DataTable ds = new DataTable();
+                using (SqlConnection conn = new SqlConnection(db.ConnectionString()))
                 {
-                    da.Fill(ds);
+                    SqlCommand sqlComm = new SqlCommand("sp_ExportPhotoEmphasisPdf", conn);
+                    sqlComm.Parameters.AddWithValue("@QuotationId", QuotationId);
+                    sqlComm.CommandType = CommandType.StoredProcedure;
+
+                    using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                    {
+                        da.Fill(ds);
+                    }
                 }
+                var ProductContent = ds.Rows[0]["data"].ToString();
+                body = body.Replace("{Product_Content}", ProductContent);
             }
-            var ProductContent = ds.Rows[0]["data"].ToString();
-            body = body.Replace("{Product_Content}", ProductContent);
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+
 
             var rootpath = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -582,7 +591,7 @@ namespace tibs.stem.Web.Controllers
             string footer = string.Empty;
             var footerfinder = builder.GetFileProvider().GetFileInfo("Stdfooter.html");
             string footerpath = footerfinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(footerpath))
+            using (StreamReader reader = new StreamReader(footerpath, System.Text.Encoding.UTF8))
             {
                 footer = reader.ReadToEnd();
             }
@@ -600,7 +609,7 @@ namespace tibs.stem.Web.Controllers
                 {
                     System.IO.File.Delete(QuotationPath + fileName);
                 }
-                catch (System.IO.IOException e)
+                catch (Exception ex)
                 {
                 }
             }
@@ -620,9 +629,9 @@ namespace tibs.stem.Web.Controllers
             }
             catch (Exception ex)
             {
-
+                Debug.WriteLine(ex);
             }
-           
+
             header = header.Replace("line-height: 6px", "line-height: 18px");
             body = body.Replace("margin-top:-20px;", "margin-top:0px;");
             body = body.Replace("{header_Content}", header);
@@ -638,7 +647,7 @@ namespace tibs.stem.Web.Controllers
             string header = string.Empty;
             var headerfinder = builder.GetFileProvider().GetFileInfo("ProductCategoryHeader.html");
             string headerpath = headerfinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(headerpath))
+            using (StreamReader reader = new StreamReader(headerpath, System.Text.Encoding.UTF8))
             {
                 header = reader.ReadToEnd();
             }
@@ -702,7 +711,7 @@ namespace tibs.stem.Web.Controllers
             var filefinder = builder.GetFileProvider().GetFileInfo("QuotationProductCategory.html");
 
             string filepath = filefinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(filepath))
+            using (StreamReader reader = new StreamReader(filepath, System.Text.Encoding.UTF8))
             {
                 body = reader.ReadToEnd();
             }
@@ -839,7 +848,7 @@ namespace tibs.stem.Web.Controllers
             string footer = string.Empty;
             var footerfinder = builder.GetFileProvider().GetFileInfo("Stdfooter.html");
             string footerpath = footerfinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(footerpath))
+            using (StreamReader reader = new StreamReader(footerpath, System.Text.Encoding.UTF8))
             {
                 footer = reader.ReadToEnd();
             }
@@ -901,7 +910,7 @@ namespace tibs.stem.Web.Controllers
             string header = string.Empty;
             var headerfinder = builder.GetFileProvider().GetFileInfo("Header.html");
             string headerpath = headerfinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(headerpath))
+            using (StreamReader reader = new StreamReader(headerpath, System.Text.Encoding.UTF8))
             {
                 header = reader.ReadToEnd();
             }
@@ -966,7 +975,7 @@ namespace tibs.stem.Web.Controllers
             string body = string.Empty;
             var filefinder = builder.GetFileProvider().GetFileInfo("StdQuotation.html");
             string filepath = filefinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(filepath))
+            using (StreamReader reader = new StreamReader(filepath, System.Text.Encoding.UTF8))
             {
                 body = reader.ReadToEnd();
             }
@@ -1137,7 +1146,7 @@ namespace tibs.stem.Web.Controllers
             string footer = string.Empty;
             var footerfinder = builder.GetFileProvider().GetFileInfo("Stdfooter.html");
             string footerpath = footerfinder.PhysicalPath;
-            using (StreamReader reader = new StreamReader(footerpath))
+            using (StreamReader reader = new StreamReader(footerpath, System.Text.Encoding.UTF8))
             {
                 footer = reader.ReadToEnd();
             }

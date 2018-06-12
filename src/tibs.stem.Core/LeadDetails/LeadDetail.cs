@@ -8,6 +8,7 @@ using tibs.stem.LeadSources;
 using tibs.stem.LeadTypes;
 using tibs.stem.Authorization.Users;
 using tibs.stem.Inquirys;
+using tibs.stem.OpportunitySources;
 
 namespace tibs.stem.LeadDetails
 {
@@ -18,13 +19,13 @@ namespace tibs.stem.LeadDetails
         public virtual Inquiry Inquirys { get; set; }
         public virtual int? InquiryId { get; set; }
 
-        [ForeignKey("LeadSourceId")]
-        public virtual LeadSource LeadSources { get; set; }
-        public virtual int? LeadSourceId { get; set; }
-
         [ForeignKey("LeadTypeId")]
         public virtual LeadType LeadTypes { get; set; }
         public virtual int? LeadTypeId { get; set; }
+
+        [ForeignKey("LeadSourceId")]
+        public virtual OpportunitySource LeadSources { get; set; }
+        public virtual int? LeadSourceId { get; set; }
 
         [ForeignKey("SalesManagerId")]
         public virtual User SalesManagers { get; set; }

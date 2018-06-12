@@ -1107,7 +1107,7 @@ namespace tibs.stem.Select2
 
             Select2Result sr = new Select2Result();
 
-            var Inquiry = (from c in _inquiryRepository.GetAll() where c.MileStoneId > 3 && c.IsClosed != true select c).ToArray();
+            var Inquiry = (from c in _inquiryRepository.GetAll() where c.MileStoneId > 3 && c.IsClosed != true && c.Won != true && c.Lost != true select c).ToArray();
 
             if (userrole.DisplayName == "Sales Executive" || userrole.DisplayName == "Sales Manager / Sales Executive")
             {

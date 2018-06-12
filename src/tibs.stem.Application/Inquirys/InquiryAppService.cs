@@ -876,7 +876,7 @@ namespace tibs.stem.Inquirys
                                        select new LeadDetailListDto
                                        {
                                            LeadSourceId = a.LeadSourceId ?? 0,
-                                           LeadSourceName = a.LeadSourceId != null ? a.LeadSources.LeadSourceName : "",
+                                           LeadSourceName = a.LeadSourceId != null ? a.LeadSources.Name : "",
                                            LeadTypeId = a.LeadTypeId ?? 0,
                                            LeadTypeName = a.LeadTypeId != null ? a.LeadTypes.LeadTypeName : "",
                                            SalesManagerId = a.SalesManagerId ?? 0,
@@ -1404,6 +1404,9 @@ namespace tibs.stem.Inquirys
                     }
                     if (input.CompanyId > 0 || input.DesignationId > 0 || input.ContactId > 0)
                     {
+                        if (input.CompatitorsId == 0)
+                            input.CompatitorsId = null;
+
                         var linkcomp = new EnquiryDetail()
                         {
                             Id = 0,
@@ -1412,7 +1415,7 @@ namespace tibs.stem.Inquirys
                             InquiryId = data,
                             DepartmentId = input.DepartmentId,
                             ContactId = input.ContactId,
-                            CompatitorsId = null,
+                            CompatitorsId = input.CompatitorsId,
                             EstimationValue = input.EstimationValue,
                             Size = input.Size,
                             Summary = input.Summary,
@@ -1604,63 +1607,83 @@ namespace tibs.stem.Inquirys
         }
         public virtual async Task CreateInquiryDetailAsync(LeadDetailInputDto input)
         {
-            var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.InquiryId).FirstOrDefault();
-            var query = input.MapTo<LeadDetail>();
-
-
-            if (input.DesignerId != null)
+            if (input.InquiryId > 0)
             {
-                JobActivity actinput = new JobActivity()
+                if (input.DesignerId == 0)
+                    input.DesignerId = null;
+
+                if (input.CoordinatorId == 0)
+                    input.CoordinatorId = null;
+
+                if (input.LeadSourceId == 0)
+                    input.LeadSourceId = null;
+
+                if (input.LeadTypeId == 0)
+                    input.LeadTypeId = null;
+
+                if (input.SalesManagerId == 0)
+                    input.SalesManagerId = null;
+
+                var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.InquiryId).FirstOrDefault();
+                var query = input.MapTo<LeadDetail>();
+
+
+                if (input.DesignerId > 0)
                 {
-                    InquiryId = input.InquiryId,
-                    DesignerId = input.DesignerId,
-                    Title = "Job Activity",
-                    JobNumber = inq.SubMmissionId + "-D1",
-                    Remark = " Auto Job Creation (Designer alloted to the Enquiry)",
-                    AllottedDate = DateTime.Now,
-                    Isopen = true,
-                };
-                var Jobactivity = actinput.MapTo<JobActivity>();
-                await _jobActivityRepository.InsertAsync(Jobactivity);
+                    JobActivity actinput = new JobActivity()
+                    {
+                        InquiryId = input.InquiryId,
+                        DesignerId = input.DesignerId,
+                        Title = "Job Activity",
+                        JobNumber = inq.SubMmissionId + "-D1",
+                        Remark = " Auto Job Creation (Designer alloted to the Enquiry)",
+                        AllottedDate = DateTime.Now,
+                        Isopen = true,
+                    };
+                    var Jobactivity = actinput.MapTo<JobActivity>();
+                    await _jobActivityRepository.InsertAsync(Jobactivity);
+                }
+                await _LeadDetailRepository.InsertAsync(query);
+
             }
-            await _LeadDetailRepository.InsertAsync(query);
-
-
         }
         public virtual async Task UpdateInquiryDetailAsync(LeadDetailInputDto input)
         {
-            var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.InquiryId).FirstOrDefault();
-            var query = await _LeadDetailRepository.GetAsync(input.Id);
+            if (input.InquiryId > 0)
+            {
+                var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.InquiryId).FirstOrDefault();
+                var query = await _LeadDetailRepository.GetAsync(input.Id);
 
 
-            var designer = (from r in _LeadDetailRepository.GetAll().Where(p => p.InquiryId == input.InquiryId && p.Id == input.Id) select r).FirstOrDefault();
-            if (designer.DesignerId == null && input.DesignerId != null)
-            {
-                JobActivity actinput = new JobActivity()
+                var designer = (from r in _LeadDetailRepository.GetAll().Where(p => p.InquiryId == input.InquiryId && p.Id == input.Id) select r).FirstOrDefault();
+                if (designer.DesignerId == null && input.DesignerId != null)
                 {
-                    InquiryId = input.InquiryId,
-                    DesignerId = input.DesignerId,
-                    Title = "Job Activity",
-                    JobNumber = inq.SubMmissionId + "-D1",
-                    Remark = " Auto Job Creation (Designer alloted to the Enquiry)",
-                    AllottedDate = DateTime.Now,
-                    Isopen = true,
-                };
-                var Jobactivity = actinput.MapTo<JobActivity>();
-                await _jobActivityRepository.InsertAsync(Jobactivity);
-            }
-            if (designer.DesignerId != null && input.DesignerId != null && input.DesignerId != designer.DesignerId)
-            {
-                var OldJobActivity = (from r in _jobActivityRepository.GetAll() where r.DesignerId == designer.DesignerId && r.InquiryId == designer.InquiryId select r).ToList();
-                foreach (var data in OldJobActivity)
-                {
-                    data.DesignerId = input.DesignerId;
-                    await _jobActivityRepository.UpdateAsync(data);
+                    JobActivity actinput = new JobActivity()
+                    {
+                        InquiryId = input.InquiryId,
+                        DesignerId = input.DesignerId,
+                        Title = "Job Activity",
+                        JobNumber = inq.SubMmissionId + "-D1",
+                        Remark = " Auto Job Creation (Designer alloted to the Enquiry)",
+                        AllottedDate = DateTime.Now,
+                        Isopen = true,
+                    };
+                    var Jobactivity = actinput.MapTo<JobActivity>();
+                    await _jobActivityRepository.InsertAsync(Jobactivity);
                 }
-            }
+                if (designer.DesignerId != null && input.DesignerId != null && input.DesignerId != designer.DesignerId)
+                {
+                    var OldJobActivity = (from r in _jobActivityRepository.GetAll() where r.DesignerId == designer.DesignerId && r.InquiryId == designer.InquiryId select r).ToList();
+                    foreach (var data in OldJobActivity)
+                    {
+                        data.DesignerId = input.DesignerId;
+                        await _jobActivityRepository.UpdateAsync(data);
+                    }
+                }
 
-            ObjectMapper.Map(input, query);
-            await _LeadDetailRepository.UpdateAsync(query);
+                ObjectMapper.Map(input, query);
+                await _LeadDetailRepository.UpdateAsync(query);
+            }
         }
         public async Task<Array> GetInquiryTickets(GetTicketInput input)
         {
@@ -1674,8 +1697,17 @@ namespace tibs.stem.Inquirys
                      p.Companys.Name.Contains(input.Filter) ||
                      p.CompanyName.Contains(input.Filter)
                 );
-
             var NewStatuss = (from a in query
+                              join enqDetail in _enquiryDetailRepository.GetAll() on a.Id equals enqDetail.InquiryId
+                              join ur in UserManager.Users on a.CreatorUserId equals ur.Id into urJoined
+                              from ur in urJoined.DefaultIfEmpty()
+                              select new InquiryListDto
+                              {
+                              }).ToList();
+
+            try
+            {
+            NewStatuss = (from a in query
                               join enqDetail in _enquiryDetailRepository.GetAll() on a.Id equals enqDetail.InquiryId
                               join ur in UserManager.Users on a.CreatorUserId equals ur.Id into urJoined
                               from ur in urJoined.DefaultIfEmpty()
@@ -1699,10 +1731,8 @@ namespace tibs.stem.Inquirys
                                   StatusColorCode = a.EnqStatus.EnqStatusColor,
                                   StatusName = a.EnqStatus.EnqStatusName ?? "",
                                   Percentage = (int)(a.EnqStatus.Percentage ?? 0),
-                                  CompanyId = enqDetail.CompanyId,
-                                  DesignationId = enqDetail.DesignationId,
+                                  CompanyId = enqDetail.CompanyId ?? 0,
                                   CompanyName = enqDetail.CompanyId != null ? enqDetail.Companys.Name : a.CompanyName,
-                                  DesignationName = enqDetail.DesignationId != null ? enqDetail.Designations.DesiginationName : a.DesignationName,
                                   DepartmentName = enqDetail.DepartmentId != null ? enqDetail.Departments.DepatmentName : "",
                                   DepartmentId = enqDetail.DepartmentId ?? 0,
                                   AssignedbyId = enqDetail.AssignedbyId ?? 0,
@@ -1711,15 +1741,20 @@ namespace tibs.stem.Inquirys
                                   TeamId = enqDetail.TeamId ?? 0,
                                   TeamName = enqDetail.TeamId != null ? enqDetail.Team.Name : "",
                                   SalesMan = enqDetail.AbpAccountManager.UserName ?? "",
-                                  EstimationValueformat = ((int)enqDetail.EstimationValue).ToString("N", new CultureInfo("en-US")).TrimEnd('0').TrimEnd('.'),
+                                  EstimationValueformat = ((decimal)enqDetail.EstimationValue).ToString("N", new CultureInfo("en-US")).TrimEnd('0').TrimEnd('.'),
                                   ClosureDate = enqDetail.ClosureDate,
                                   LastActivity = enqDetail.LastActivity,
                                   IsExpire = false,
-                                  EstimationValue = (int)enqDetail.EstimationValue,
+                                  EstimationValue = (decimal)enqDetail.EstimationValue,
                                   ProfilePicture = "",
-                                  UserName =  ur != null ? ur.UserName : ""
+                                  UserName = ur != null ? ur.UserName : ""
                               }).ToList();
 
+            }
+            catch (Exception ex)
+            {
+
+            }
 
             foreach (var d in NewStatuss)
             {
@@ -4295,6 +4330,105 @@ namespace tibs.stem.Inquirys
             return new PagedResultDto<InquiryListDto>(
                     count, inquirylistoutput);
         }
+        public ListResultDto<CompanyEnquiryList> GetCompanyWiseInquiry(CompanyEnquiryInput input)
+        {
+            var query = _NewCompanyRepository.GetAll().Where(c => c.Id > 0)
+                        .WhereIf(
+                            !input.Filter.IsNullOrEmpty(),
+                             p => p.Name.Contains(input.Filter) ||
+                                   p.AbpAccountManager.UserName.Contains(input.Filter) ||
+                                   p.Id.ToString().Contains(input.Filter));
+
+            var Company = (from c in query
+                           select new CompanyEnquiryList
+                           {
+                               CompanyId = c.Id,
+                               CompanyName = c.Name,
+                               AccountManager = c.AbpAccountManager.UserName,
+                               Inquirys = new InquiryInformation[0],
+                               EnquiryCount = 0,
+                               EnquiryWonCount = 0
+                           });
+
+            var Companys = Company.MapTo<List<CompanyEnquiryList>>();
+
+            foreach (var item in Companys)
+            {
+                var Enq = (from enq in _inquiryRepository.GetAll() where enq.CompanyId == item.CompanyId select enq).ToArray();
+                if (Enq.Length > 0)
+                {
+                    item.EnquiryCount = Enq.Length;
+                    item.Inquirys = (from r in Enq
+                                     select new InquiryInformation
+                                     {
+                                         EnquiryId = r.Id,
+                                         EnquiryName = r.Name,
+                                         Won = r.Won
+                                     }).ToArray();
+                    var EnqWon = (from enqWon in _inquiryRepository.GetAll() where enqWon.CompanyId == item.CompanyId && enqWon.Won == true select enqWon).ToArray();
+                    if (EnqWon.Length > 0)
+                    {
+                        item.EnquiryWonCount = EnqWon.Length;
+                    }
+                }
+            }
+
+            var CompanyList = Companys.OrderByDescending(p => p.EnquiryCount);
+
+            return new ListResultDto<CompanyEnquiryList>(CompanyList.MapTo<List<CompanyEnquiryList>>());
+        }
+        public async Task<PagedResultDto<CompanyEnquiryList>> GetCompanyWiseInquiryGrid(CompanyInquiryInput input)
+        {
+            var query = _NewCompanyRepository.GetAll().Where(c => c.Id > 0)
+                        .WhereIf(
+                            !input.Filter.IsNullOrEmpty(),
+                             p => p.Name.Contains(input.Filter) ||
+                                   p.AbpAccountManager.UserName.Contains(input.Filter) ||
+                                   p.Id.ToString().Contains(input.Filter));
+
+            var Company = (from c in query
+                           select new CompanyEnquiryList
+                           {
+                               CompanyId = c.Id,
+                               CompanyName = c.Name,
+                               AccountManager = c.AbpAccountManager.UserName,
+                               Inquirys = new InquiryInformation[0],
+                               EnquiryCount = 0,
+                               EnquiryWonCount = 0
+                           });
+
+            var Companys = Company.ToList();
+
+            foreach (var item in Companys)
+            {
+                var Enq = (from enq in _inquiryRepository.GetAll() where enq.CompanyId == item.CompanyId select enq).ToArray();
+                if (Enq.Length > 0)
+                {
+                    item.EnquiryCount = Enq.Length;
+                    item.Inquirys = (from r in Enq
+                                     select new InquiryInformation
+                                     {
+                                         EnquiryId = r.Id,
+                                         EnquiryName = r.Name,
+                                         Won = r.Won
+                                     }).ToArray();
+                    var EnqWon = (from enqWon in _inquiryRepository.GetAll() where enqWon.CompanyId == item.CompanyId && enqWon.Won == true select enqWon).ToArray();
+                    if (EnqWon.Length > 0)
+                    {
+                        item.EnquiryWonCount = EnqWon.Length;
+                    }
+                }
+            }
+
+            var EnqCount = Companys.Count();
+
+            var Enquiry = Companys.OrderByDescending(p => p.EnquiryCount)
+                                   .Skip(input.SkipCount).Take(input.MaxResultCount);
+
+            var EnquiryOutput = Enquiry.MapTo<List<CompanyEnquiryList>>();
+            return new PagedResultDto<CompanyEnquiryList>(EnqCount, EnquiryOutput);
+        }
+
     }
     public class monthdto
     {

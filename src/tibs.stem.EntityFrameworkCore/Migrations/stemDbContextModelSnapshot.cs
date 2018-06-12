@@ -2995,6 +2995,8 @@ namespace tibs.stem.Migrations
 
                     b.Property<int?>("ProductStateId");
 
+                    b.Property<int?>("RefId");
+
                     b.Property<string>("SuspectCode");
 
                     b.Property<int>("Width");
@@ -4434,7 +4436,7 @@ namespace tibs.stem.Migrations
                         .WithMany()
                         .HasForeignKey("InquiryId");
 
-                    b.HasOne("tibs.stem.LeadSources.LeadSource", "LeadSources")
+                    b.HasOne("tibs.stem.OpportunitySources.OpportunitySource", "LeadSources")
                         .WithMany()
                         .HasForeignKey("LeadSourceId");
 

@@ -32,5 +32,7 @@ namespace tibs.stem.Products
         public virtual ProductStates ProductState { get; set; }
         public virtual int? ProductStateId { get; set; }
 
+        public virtual int? RefId { get; set; }
+
     }
 }

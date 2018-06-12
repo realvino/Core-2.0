@@ -81,6 +81,10 @@ namespace tibs.stem.Quotationss
         private readonly IRepository<AcitivityTrack> _acitivityTrackRepository;
         private readonly IQuotationInquiryFilterListExcelExporter _QuotationInquiryFilterListExcelExporter;
         private readonly IRepository<View> _ViewRepository;
+        private readonly ITeamEnquiryReportExcelExporter _TeamEnquiryReportExcelExporter;
+        private readonly ITeamReportExcelExporter _TeamReportExcelExporter;
+        private readonly IAllTeamReportExcelExporter _AllTeamReportExcelExporter;
+
         public QuotationAppService(
             IRepository<Quotation> quotationRepository,
             IRepository<NewCompany> newCompanyRepository,
@@ -110,7 +114,10 @@ namespace tibs.stem.Quotationss
             IRepository<TeamDetail> TeamDetailRepository,
             IQuotationInquiryFilterListExcelExporter QuotationInquiryFilterListExcelExporter,
             IRepository<View> ViewRepository,
-            IRepository<TemporaryProductImage> TempProductImageRepository
+            IRepository<TemporaryProductImage> TempProductImageRepository,
+            ITeamEnquiryReportExcelExporter TeamEnquiryReportExcelExporter,
+            ITeamReportExcelExporter TeamReportExcelExporter,
+            IAllTeamReportExcelExporter AllTeamReportExcelExporter
             )
         {
             _quotationRepository = quotationRepository;
@@ -143,6 +150,9 @@ namespace tibs.stem.Quotationss
             _acitivityTrackRepository = acitivityTrackRepository;
             _QuotationInquiryFilterListExcelExporter = QuotationInquiryFilterListExcelExporter;
             _ViewRepository = ViewRepository;
+            _TeamEnquiryReportExcelExporter = TeamEnquiryReportExcelExporter;
+            _TeamReportExcelExporter = TeamReportExcelExporter;
+            _AllTeamReportExcelExporter = AllTeamReportExcelExporter;
         }
         public async Task<PagedResultDto<QuotationListDto>> GetQuotation(GetQuotationInput input)
         {
@@ -2426,6 +2436,613 @@ namespace tibs.stem.Quotationss
             }
 
         }
+        public async Task<FileDto> GetTeamEnquiryReportExcel(NullableIdDto input)
+        {
+            DateTime currentdate = DateTime.Now;
+            var currentmonth = new DateTime(currentdate.Year, currentdate.Month, 1);
+            var currentyear = currentmonth.AddYears(1);
+            var listmonths = Enumerable.Range(0, 12).Select(m => currentmonth.AddMonths(m)).ToArray();
+            var query = _enquiryDetailRepository.GetAll().Where(p => p.AssignedbyId == input.Id && p.ClosureDate >= currentmonth && p.ClosureDate < currentyear);
+            string viewquery = "SELECT * FROM [dbo].[View_ForecastReport]";
+            DataTable viewtable = new DataTable();
+            ConnectionAppService db = new ConnectionAppService();
+            try
+            {
+                SqlConnection con = new SqlConnection(db.ConnectionString());
+                con.Open();
+                SqlCommand cmd = new SqlCommand(viewquery, con);
+                using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                {
+                    sda.Fill(viewtable);
+                }
+                con.Close();
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            var viewdata = (from DataRow dr in viewtable.Rows
+                            select new ForecastDataList
+                            {
+                                Id = Convert.ToInt32(dr["Id"]),
+                                QuotationRefno = Convert.ToString(dr["QuotationRefno"]),
+                                QuotationTotal = Convert.ToDecimal(dr["QuotationTotal"]),
+                                StagePercent = Convert.ToDecimal(dr["StagePercent"]),
+                                EnqStage = Convert.ToString(dr["EnqStage"])
+                            });
+            try
+            {
+                var inqwdet = (from r in query
+                               join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true && p.IsClosed != true) on r.InquiryId equals enq.Id
+                               select new QuotationReportListDto
+                               {
+                                   Date = r.CreationTime.ToString("dd-MMM-yy"),
+                                   InquiryName = r.InquiryId > 0 ? r.Inquirys.Name : "",
+                                   Status = enq.LeadStatusId > 0 ? enq.LeadStatuss.LeadStatusName : "",
+                                   CompanyName = enq.Companys.Name ?? "",
+                                   QuotationId = 0,
+                                   InquiryId = enq.Id,
+                                   ClosureDate = r.ClosureDate ?? null,
+                                   AccountManager = r.AssignedbyId > 0 ? r.AbpAccountManager.UserName : "",
+                                   NewOrExisting = enq.Companys.NewCustomerTypes.Title ?? "",
+                                   Location = enq.LocationId > 0 ? enq.Locations.LocationName : "",
+                                   AEDValue = Math.Round(r.EstimationValue, 2),
+                                   Stage = "New",
+                                   Percentage = 0,
+                                   WeightedAED = 0,
+                                   Total1Value = 0,
+                                   Total2Value = 0,
+                                   Total3Value = 0,
+                                   Total4Value = 0,
+                                   Total5Value = 0,
+                                   Total6Value = 0,
+                                   Total7Value = 0,
+                                   Total8Value = 0,
+                                   Total9Value = 0,
+                                   Total10Value = 0,
+                                   Total11Value = 0,
+                                   Total12Value = 0,
+                                   Total1ValueFormat = listmonths[0].ToString("MMM-yyyy"),
+                                   Total2ValueFormat = listmonths[1].ToString("MMM-yyyy"),
+                                   Total3ValueFormat = listmonths[2].ToString("MMM-yyyy"),
+                                   Total4ValueFormat = listmonths[3].ToString("MMM-yyyy"),
+                                   Total5ValueFormat = listmonths[4].ToString("MMM-yyyy"),
+                                   Total6ValueFormat = listmonths[5].ToString("MMM-yyyy"),
+                                   Total7ValueFormat = listmonths[6].ToString("MMM-yyyy"),
+                                   Total8ValueFormat = listmonths[7].ToString("MMM-yyyy"),
+                                   Total9ValueFormat = listmonths[8].ToString("MMM-yyyy"),
+                                   Total10ValueFormat = listmonths[9].ToString("MMM-yyyy"),
+                                   Total11ValueFormat = listmonths[10].ToString("MMM-yyyy"),
+                                   Total12ValueFormat = listmonths[11].ToString("MMM-yyyy"),
+                                   ActionDate = r.LastActivity != null ? r.LastActivity.ToString() : "",
+                                   Notes = r.Inquirys.Remarks ?? ""
+
+                               });
+
+                inquirylistdto = inqwdet.MapTo<List<QuotationReportListDto>>();
+            }
+            catch (Exception ex)
+            {
+
+            }
+            try
+            {
+                foreach (var item in inquirylistdto)
+                {
+                    var data = (from r in viewdata where r.Id == item.InquiryId select r).FirstOrDefault();
+                    if (data != null)
+                    {
+                        item.AEDValue = data.QuotationTotal;
+                        item.WeightedAED = Math.Round(data.StagePercent * data.QuotationTotal / 100, 2);
+                        item.Stage = data.EnqStage;
+                        item.Percentage = data.StagePercent;
+
+                        var InquiryDetailClosureDate = item.ClosureDate;
+                        if (InquiryDetailClosureDate != null)
+                        {
+                            var Month = InquiryDetailClosureDate.GetValueOrDefault().ToString("MMM-yyyy");
+                            if (listmonths[0].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total1Value = Math.Round(item.WeightedAED, 2);
+                            }
+                            else if (listmonths[1].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total2Value = Math.Round(item.WeightedAED, 2);
+                            }
+                            else if (listmonths[2].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total3Value = Math.Round(item.WeightedAED, 2);
+                            }
+                            else if (listmonths[3].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total4Value = Math.Round(item.WeightedAED, 2);
+                            }
+                            else if (listmonths[4].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total5Value = Math.Round(item.WeightedAED, 2);
+                            }
+                            else if (listmonths[5].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total6Value = Math.Round(item.WeightedAED, 2);
+                            }
+                            else if (listmonths[6].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total7Value = Math.Round(item.WeightedAED, 2);
+                            }
+                            else if (listmonths[7].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total8Value = Math.Round(item.WeightedAED, 2);
+                            }
+                            else if (listmonths[8].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total9Value = Math.Round(item.WeightedAED, 2);
+                            }
+                            else if (listmonths[9].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total10Value = Math.Round(item.WeightedAED, 2);
+                            }
+                            else if (listmonths[10].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total11Value = Math.Round(item.WeightedAED, 2);
+                            }
+                            else if (listmonths[11].ToString("MMM-yyyy") == Month)
+                            {
+                                item.Total12Value = Math.Round(item.WeightedAED, 2);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            QuotationReportListDto TotalReport = new QuotationReportListDto
+            {
+                Date = "Total",
+                AEDValue = 0,
+                WeightedAED = 0,
+                Total1Value = 0,
+                Total2Value = 0,
+                Total3Value = 0,
+                Total4Value = 0,
+                Total5Value = 0,
+                Total6Value = 0,
+                Total7Value = 0,
+                Total8Value = 0,
+                Total9Value = 0,
+                Total10Value = 0,
+                Total11Value = 0,
+                Total12Value = 0
+            };
+
+            foreach (var item in inquirylistdto)
+            {
+                TotalReport.AEDValue = Decimal.Add(TotalReport.AEDValue, item.AEDValue);
+                TotalReport.WeightedAED = Decimal.Add(TotalReport.WeightedAED, item.WeightedAED);
+                TotalReport.Total1Value = Decimal.Add(TotalReport.Total1Value, item.Total1Value);
+                TotalReport.Total2Value = Decimal.Add(TotalReport.Total2Value, item.Total2Value);
+                TotalReport.Total3Value = Decimal.Add(TotalReport.Total3Value, item.Total3Value);
+                TotalReport.Total4Value = Decimal.Add(TotalReport.Total4Value, item.Total4Value);
+                TotalReport.Total5Value = Decimal.Add(TotalReport.Total5Value, item.Total5Value);
+                TotalReport.Total6Value = Decimal.Add(TotalReport.Total6Value, item.Total6Value);
+                TotalReport.Total7Value = Decimal.Add(TotalReport.Total7Value, item.Total7Value);
+                TotalReport.Total8Value = Decimal.Add(TotalReport.Total8Value, item.Total8Value);
+                TotalReport.Total9Value = Decimal.Add(TotalReport.Total9Value, item.Total9Value);
+                TotalReport.Total10Value = Decimal.Add(TotalReport.Total10Value, item.Total10Value);
+                TotalReport.Total11Value = Decimal.Add(TotalReport.Total11Value, item.Total11Value);
+                TotalReport.Total12Value = Decimal.Add(TotalReport.Total12Value, item.Total12Value);
+            }
+            return _TeamEnquiryReportExcelExporter.ExportToFile(inquirylistdto, TotalReport);
+
+        }
+        public async Task<FileDto> GetTeamReportExcel(NullableIdDto input)
+        {
+            var query = _TeamDetailRepository.GetAll().Where(p => p.TeamId == input.Id);
+
+            DateTime currentdate = DateTime.Now;
+            var currentmonth = new DateTime(currentdate.Year, currentdate.Month, 1);
+            var currentyear = currentmonth.AddYears(1);
+            var listmonths = Enumerable.Range(0, 12).Select(m => currentmonth.AddMonths(m)).ToArray();
+
+            string viewquery = "SELECT * FROM [dbo].[View_ForecastReport]";
+            DataTable viewtable = new DataTable();
+            ConnectionAppService db = new ConnectionAppService();
+            try
+            {
+                SqlConnection con = new SqlConnection(db.ConnectionString());
+                con.Open();
+                SqlCommand cmd = new SqlCommand(viewquery, con);
+                using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                {
+                    sda.Fill(viewtable);
+                }
+                con.Close();
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            var viewdata = (from DataRow dr in viewtable.Rows
+                            select new ForecastDataList
+                            {
+                                Id = Convert.ToInt32(dr["Id"]),
+                                QuotationRefno = Convert.ToString(dr["QuotationRefno"]),
+                                QuotationTotal = Convert.ToDecimal(dr["QuotationTotal"]),
+                                StagePercent = Convert.ToDecimal(dr["StagePercent"]),
+                                EnqStage = Convert.ToString(dr["EnqStage"])
+                            });
+
+            var reg = (from r in query
+                       select new TeamReportListDto
+                       {
+                           TeamName = r.Team.Name ?? "",
+                           AccountManager = r.Salesman.UserName ?? "",
+                           AccountManagerId = r.SalesmanId,
+                           TotalAEDValue = 0,
+                           TeamId = (int)(r.TeamId ?? 0),
+                           TotalWeightedAED = 0,
+                           Total1Value = 0,
+                           Total2Value = 0,
+                           Total3Value = 0,
+                           Total4Value = 0,
+                           Total5Value = 0,
+                           Total6Value = 0,
+                           Total7Value = 0,
+                           Total8Value = 0,
+                           Total9Value = 0,
+                           Total10Value = 0,
+                           Total11Value = 0,
+                           Total12Value = 0,
+                           Total1ValueFormat = listmonths[0].ToString("MMM-yyyy"),
+                           Total2ValueFormat = listmonths[1].ToString("MMM-yyyy"),
+                           Total3ValueFormat = listmonths[2].ToString("MMM-yyyy"),
+                           Total4ValueFormat = listmonths[3].ToString("MMM-yyyy"),
+                           Total5ValueFormat = listmonths[4].ToString("MMM-yyyy"),
+                           Total6ValueFormat = listmonths[5].ToString("MMM-yyyy"),
+                           Total7ValueFormat = listmonths[6].ToString("MMM-yyyy"),
+                           Total8ValueFormat = listmonths[7].ToString("MMM-yyyy"),
+                           Total9ValueFormat = listmonths[8].ToString("MMM-yyyy"),
+                           Total10ValueFormat = listmonths[9].ToString("MMM-yyyy"),
+                           Total11ValueFormat = listmonths[10].ToString("MMM-yyyy"),
+                           Total12ValueFormat = listmonths[11].ToString("MMM-yyyy"),
+                       });
+
+            var TeamDetailListDtos = reg.MapTo<List<TeamReportListDto>>();
+
+            try
+            {
+
+                foreach (var salesman in TeamDetailListDtos)
+                {
+                    var SalesmanId = (from u in UserManager.Users where u.UserName == salesman.AccountManager select u.Id).FirstOrDefault();
+                    var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.AssignedbyId == SalesmanId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true) on t.InquiryId equals enq.Id select t).ToArray();
+                    decimal salesmanaedvalue = 0;
+                    decimal salesmanweightvalue = 0;
+                    if (enqDetail.Length > 0)
+                    {
+                        foreach (var item in enqDetail)
+                        {
+                            decimal qutsalesmanaedvalue = Math.Round(item.EstimationValue, 2);
+                            decimal qutsalesmanweightvalue = 0;
+                            var data = (from r in viewdata where r.Id == item.InquiryId select r).FirstOrDefault();
+                            if (data != null)
+                            {
+                                qutsalesmanaedvalue = data.QuotationTotal;
+                                qutsalesmanweightvalue = Math.Round(data.StagePercent * data.QuotationTotal / 100, 2);
+                                salesmanaedvalue = salesmanaedvalue + qutsalesmanaedvalue;
+                                salesmanweightvalue = salesmanweightvalue + qutsalesmanweightvalue;
+                                var InquiryDetailClosureDate = item.ClosureDate;
+                                if (InquiryDetailClosureDate != null)
+                                {
+                                    var Month = InquiryDetailClosureDate.GetValueOrDefault().ToString("MMM-yyyy");
+                                    if (listmonths[0].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total1Value = Math.Round(Convert.ToDecimal(salesman.Total1Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[1].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total2Value = Math.Round(Convert.ToDecimal(salesman.Total2Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[2].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total3Value = Math.Round(Convert.ToDecimal(salesman.Total3Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[3].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total4Value = Math.Round(Convert.ToDecimal(salesman.Total4Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[4].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total5Value = Math.Round(Convert.ToDecimal(salesman.Total5Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[5].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total6Value = Math.Round(Convert.ToDecimal(salesman.Total6Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[6].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total7Value = Math.Round(Convert.ToDecimal(salesman.Total7Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[7].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total8Value = Math.Round(Convert.ToDecimal(salesman.Total8Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[8].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total9Value = Math.Round(Convert.ToDecimal(salesman.Total9Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[9].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total10Value = Math.Round(Convert.ToDecimal(salesman.Total10Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[10].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total11Value = Math.Round(Convert.ToDecimal(salesman.Total11Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[11].ToString("MMM-yyyy") == Month)
+                                    {
+                                        salesman.Total12Value = Math.Round(Convert.ToDecimal(salesman.Total12Value + qutsalesmanweightvalue), 2);
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                    salesman.TotalAEDValue = Math.Round(salesmanaedvalue, 2);
+                    salesman.TotalWeightedAED = Math.Round(salesmanweightvalue, 2);
+
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            TeamReportListDto TotalReport = new TeamReportListDto
+            {
+                AccountManager = "Total",
+                TotalAEDValue = 0,
+                TotalWeightedAED = 0,
+                Total1Value = 0,
+                Total2Value = 0,
+                Total3Value = 0,
+                Total4Value = 0,
+                Total5Value = 0,
+                Total6Value = 0,
+                Total7Value = 0,
+                Total8Value = 0,
+                Total9Value = 0,
+                Total10Value = 0,
+                Total11Value = 0,
+                Total12Value = 0
+            };
+
+            foreach (var item in TeamDetailListDtos)
+            {
+                TotalReport.TotalAEDValue = Decimal.Add(TotalReport.TotalAEDValue, item.TotalAEDValue);
+                TotalReport.TotalWeightedAED = Decimal.Add(TotalReport.TotalWeightedAED, item.TotalWeightedAED);
+                TotalReport.Total1Value = Decimal.Add(TotalReport.Total1Value, item.Total1Value);
+                TotalReport.Total2Value = Decimal.Add(TotalReport.Total2Value, item.Total2Value);
+                TotalReport.Total3Value = Decimal.Add(TotalReport.Total3Value, item.Total3Value);
+                TotalReport.Total4Value = Decimal.Add(TotalReport.Total4Value, item.Total4Value);
+                TotalReport.Total5Value = Decimal.Add(TotalReport.Total5Value, item.Total5Value);
+                TotalReport.Total6Value = Decimal.Add(TotalReport.Total6Value, item.Total6Value);
+                TotalReport.Total7Value = Decimal.Add(TotalReport.Total7Value, item.Total7Value);
+                TotalReport.Total8Value = Decimal.Add(TotalReport.Total8Value, item.Total8Value);
+                TotalReport.Total9Value = Decimal.Add(TotalReport.Total9Value, item.Total9Value);
+                TotalReport.Total10Value = Decimal.Add(TotalReport.Total10Value, item.Total10Value);
+                TotalReport.Total11Value = Decimal.Add(TotalReport.Total11Value, item.Total11Value);
+                TotalReport.Total12Value = Decimal.Add(TotalReport.Total12Value, item.Total12Value);
+            }
+            return _TeamReportExcelExporter.ExportToFile(TeamDetailListDtos, TotalReport);
+        }
+        public async Task<FileDto> GetAllTeamReportExcel()
+        {
+            var query = _TeamRepository.GetAll();
+            DateTime currentdate = DateTime.Now;
+            var currentmonth = new DateTime(currentdate.Year, currentdate.Month, 1);
+            var currentyear = currentmonth.AddYears(1);
+            var listmonths = Enumerable.Range(0, 12).Select(m => currentmonth.AddMonths(m)).ToArray();
+
+            string viewquery = "SELECT * FROM [dbo].[View_ForecastReport]";
+            DataTable viewtable = new DataTable();
+            ConnectionAppService db = new ConnectionAppService();
+            try
+            {
+                SqlConnection con = new SqlConnection(db.ConnectionString());
+                con.Open();
+                SqlCommand cmd = new SqlCommand(viewquery, con);
+                using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                {
+                    sda.Fill(viewtable);
+                }
+                con.Close();
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            var viewdata = (from DataRow dr in viewtable.Rows
+                            select new ForecastDataList
+                            {
+                                Id = Convert.ToInt32(dr["Id"]),
+                                QuotationRefno = Convert.ToString(dr["QuotationRefno"]),
+                                QuotationTotal = Convert.ToDecimal(dr["QuotationTotal"]),
+                                StagePercent = Convert.ToDecimal(dr["StagePercent"]),
+                                EnqStage = Convert.ToString(dr["EnqStage"])
+                            });
+
+            var reg = (from r in query
+                       select new TeamReportListDto
+                       {
+                           TeamName = r.Name,
+                           TeamId = r.Id,
+                           AccountManager = "",
+                           TotalAEDValue = 0,
+                           TotalWeightedAED = 0,
+                           Total1Value = 0,
+                           Total2Value = 0,
+                           Total3Value = 0,
+                           Total4Value = 0,
+                           Total5Value = 0,
+                           Total6Value = 0,
+                           Total7Value = 0,
+                           Total8Value = 0,
+                           Total9Value = 0,
+                           Total10Value = 0,
+                           Total11Value = 0,
+                           Total12Value = 0,
+                           Total1ValueFormat = listmonths[0].ToString("MMM-yyyy"),
+                           Total2ValueFormat = listmonths[1].ToString("MMM-yyyy"),
+                           Total3ValueFormat = listmonths[2].ToString("MMM-yyyy"),
+                           Total4ValueFormat = listmonths[3].ToString("MMM-yyyy"),
+                           Total5ValueFormat = listmonths[4].ToString("MMM-yyyy"),
+                           Total6ValueFormat = listmonths[5].ToString("MMM-yyyy"),
+                           Total7ValueFormat = listmonths[6].ToString("MMM-yyyy"),
+                           Total8ValueFormat = listmonths[7].ToString("MMM-yyyy"),
+                           Total9ValueFormat = listmonths[8].ToString("MMM-yyyy"),
+                           Total10ValueFormat = listmonths[9].ToString("MMM-yyyy"),
+                           Total11ValueFormat = listmonths[10].ToString("MMM-yyyy"),
+                           Total12ValueFormat = listmonths[11].ToString("MMM-yyyy"),
+
+                       });
+
+            var TeamListDtos = reg.MapTo<List<TeamReportListDto>>();
+
+            foreach (var team in TeamListDtos)
+            {
+
+                var TeamId = (from p in _TeamRepository.GetAll() where p.Name == team.TeamName select p.Id).FirstOrDefault();
+                var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.TeamId == TeamId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true) on t.InquiryId equals enq.Id select t).ToArray();
+                decimal teamaedvalue = 0;
+                decimal teamweightvalue = 0;
+                if (enqDetail.Length > 0)
+                {
+                    foreach (var item in enqDetail)
+                    {
+                        decimal qutsalesmanaedvalue = Math.Round(item.EstimationValue, 2);
+                        decimal qutsalesmanweightvalue = 0;
+                        try
+                        {
+                            var data = (from r in viewdata where r.Id == item.InquiryId select r).FirstOrDefault();
+                            if (data != null)
+                            {
+                                qutsalesmanaedvalue = data.QuotationTotal;
+                                qutsalesmanweightvalue = Math.Round(data.StagePercent * data.QuotationTotal / 100, 2);
+                                teamaedvalue = teamaedvalue + qutsalesmanaedvalue;
+                                teamweightvalue = teamweightvalue + qutsalesmanweightvalue;
+                                var InquiryDetailClosureDate = item.ClosureDate;
+                                if (InquiryDetailClosureDate != null)
+                                {
+                                    var Month = InquiryDetailClosureDate.GetValueOrDefault().ToString("MMM-yyyy");
+                                    if (listmonths[0].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total1Value = Math.Round(Convert.ToDecimal(team.Total1Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[1].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total2Value = Math.Round(Convert.ToDecimal(team.Total2Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[2].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total3Value = Math.Round(Convert.ToDecimal(team.Total3Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[3].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total4Value = Math.Round(Convert.ToDecimal(team.Total4Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[4].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total5Value = Math.Round(Convert.ToDecimal(team.Total5Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[5].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total6Value = Math.Round(Convert.ToDecimal(team.Total6Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[6].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total7Value = Math.Round(Convert.ToDecimal(team.Total7Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[7].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total8Value = Math.Round(Convert.ToDecimal(team.Total8Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[8].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total9Value = Math.Round(Convert.ToDecimal(team.Total9Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[9].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total10Value = Math.Round(Convert.ToDecimal(team.Total10Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[10].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total11Value = Math.Round(Convert.ToDecimal(team.Total11Value + qutsalesmanweightvalue), 2);
+                                    }
+                                    else if (listmonths[11].ToString("MMM-yyyy") == Month)
+                                    {
+                                        team.Total12Value = Math.Round(Convert.ToDecimal(team.Total12Value + qutsalesmanweightvalue), 2);
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+
+                    }
+                }
+                team.TotalAEDValue = Math.Round(teamaedvalue, 2);
+                team.TotalWeightedAED = Math.Round(teamweightvalue, 2);
+            }
+
+            TeamReportListDto TotalReport = new TeamReportListDto
+            {
+                TeamName = "Total",
+                TotalAEDValue = 0,
+                TotalWeightedAED = 0,
+                Total1Value = 0,
+                Total2Value = 0,
+                Total3Value = 0,
+                Total4Value = 0,
+                Total5Value = 0,
+                Total6Value = 0,
+                Total7Value = 0,
+                Total8Value = 0,
+                Total9Value = 0,
+                Total10Value = 0,
+                Total11Value = 0,
+                Total12Value = 0
+            };
+
+            foreach (var item in TeamListDtos)
+            {
+                TotalReport.TotalAEDValue = Decimal.Add(TotalReport.TotalAEDValue, item.TotalAEDValue);
+                TotalReport.TotalWeightedAED = Decimal.Add(TotalReport.TotalWeightedAED, item.TotalWeightedAED);
+                TotalReport.Total1Value = Decimal.Add(TotalReport.Total1Value, item.Total1Value);
+                TotalReport.Total2Value = Decimal.Add(TotalReport.Total2Value, item.Total2Value);
+                TotalReport.Total3Value = Decimal.Add(TotalReport.Total3Value, item.Total3Value);
+                TotalReport.Total4Value = Decimal.Add(TotalReport.Total4Value, item.Total4Value);
+                TotalReport.Total5Value = Decimal.Add(TotalReport.Total5Value, item.Total5Value);
+                TotalReport.Total6Value = Decimal.Add(TotalReport.Total6Value, item.Total6Value);
+                TotalReport.Total7Value = Decimal.Add(TotalReport.Total7Value, item.Total7Value);
+                TotalReport.Total8Value = Decimal.Add(TotalReport.Total8Value, item.Total8Value);
+                TotalReport.Total9Value = Decimal.Add(TotalReport.Total9Value, item.Total9Value);
+                TotalReport.Total10Value = Decimal.Add(TotalReport.Total10Value, item.Total10Value);
+                TotalReport.Total11Value = Decimal.Add(TotalReport.Total11Value, item.Total11Value);
+                TotalReport.Total12Value = Decimal.Add(TotalReport.Total12Value, item.Total12Value);
+            }
+
+            return _AllTeamReportExcelExporter.ExportToFile(TeamListDtos, TotalReport);
+
+        }
+
     }
 
     public class DiscountEmailFirst

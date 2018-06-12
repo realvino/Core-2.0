@@ -1087,7 +1087,6 @@
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles\" />
     <Folder Include="wwwroot\Common\File\QuotationProduct\" />
-    <Folder Include="wwwroot\Common\Images\Product\1415\" />
     <Folder Include="wwwroot\Common\Images\Profile\" />
     <Folder Include="wwwroot\Common\Import\" />
     <Folder Include="wwwroot\Common\PDF\PhotoEmphasisPDF\" />

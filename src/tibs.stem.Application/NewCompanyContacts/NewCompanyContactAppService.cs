@@ -479,6 +479,9 @@ namespace tibs.stem.NewCompanyContacts
             var data = _NewCompanyRepository.GetAll().Where(p => p.Name == input.Name && p.NewCustomerTypeId == input.NewCustomerTypeId && p.Id != input.Id).ToList();
             if (data.Count == 0)
             {
+                if (input.ApprovedById == 0)
+                    input.ApprovedById = null;
+
                 CreateCompany company = new CreateCompany()
                 {
                     Id = input.Id,
@@ -519,6 +522,9 @@ namespace tibs.stem.NewCompanyContacts
         }
         public virtual async Task<int> UpdateContact(CreateCompanyOrContact input)
         {
+            if (input.DesignationId == 0)
+                input.DesignationId = null;
+
             CreateContact contact = new CreateContact()
             {
                 Id = input.Id,
@@ -594,6 +600,8 @@ namespace tibs.stem.NewCompanyContacts
 
         public virtual async Task CreateContactInfo(CreateContactInfo input)
         {
+            try
+            {
             var ContactInfo = input.MapTo<NewContactInfo>();
             if (string.IsNullOrEmpty(input.InfoData) == false && input.NewInfoTypeId > 0)
             {
@@ -615,12 +623,12 @@ namespace tibs.stem.NewCompanyContacts
                                 }
                                 else
                                 {
-                                    throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
+                                    //throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
                                 }
                             }
                             else
                             {
-                                throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in Email Domain '" + currentDomain + "'...");
+                                //throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in Email Domain '" + currentDomain + "'...");
                             }
                         }
                         else
@@ -631,7 +639,8 @@ namespace tibs.stem.NewCompanyContacts
                                 await _NewContactInfoRepository.InsertAsync(ContactInfo);
                             }
                             else
-                                throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
+                            { }
+                               // throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
                         }
                     }
                     if (input.NewContacId > 0)
@@ -655,12 +664,12 @@ namespace tibs.stem.NewCompanyContacts
                                 }
                                 else
                                 {
-                                    throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
+                                   // throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
                                 }
                             }
                             else
                             {
-                                throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in Email Domain '" + currentDomain + "'...");
+                                //throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in Email Domain '" + currentDomain + "'...");
                             }
                         }
                         else
@@ -671,7 +680,8 @@ namespace tibs.stem.NewCompanyContacts
                                 await _NewContactInfoRepository.InsertAsync(ContactInfo);
                             }
                             else
-                                throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
+                            { }
+                               // throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
                         }
                     }
                 }
@@ -685,13 +695,19 @@ namespace tibs.stem.NewCompanyContacts
                     }
                     else
                     {
-                        throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
+                        //throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
                     }
                 }
                 else
                 {
                     await _NewContactInfoRepository.InsertAsync(ContactInfo);
                 }
+            }
+
+            }
+            catch (Exception ex)
+            {
+
             }
         }
 
@@ -725,12 +741,12 @@ namespace tibs.stem.NewCompanyContacts
                             }
                             else
                             {
-                                throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
+                               // throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
                             }
                         }
                         else
                         {
-                            throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in Email Domain '" + currentDomain + "'...");
+                            //throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in Email Domain '" + currentDomain + "'...");
                         }
                     }
                     else
@@ -748,7 +764,8 @@ namespace tibs.stem.NewCompanyContacts
                             }
                         }
                         else
-                            throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
+                        { }
+                            //throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
                     }
                 }
                 if (input.NewContacId > 0)
@@ -778,12 +795,12 @@ namespace tibs.stem.NewCompanyContacts
                             }
                             else
                             {
-                               throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
+                               //throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
                             }
                         }
                         else
                         {
-                            throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in Email Domain '" + currentDomain + "'...");
+                            //throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in Email Domain '" + currentDomain + "'...");
                         }
                     }
                     else
@@ -801,7 +818,10 @@ namespace tibs.stem.NewCompanyContacts
                             }
                         }
                         else
-                            throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
+                        {
+
+                        }
+                           // throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
                     }
                 }
             }
@@ -821,7 +841,7 @@ namespace tibs.stem.NewCompanyContacts
                 }
                 else
                 {
-                    throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
+                    //throw new UserFriendlyException("Ooops!", "Duplicate Data Occured in data info '" + input.InfoData + "'...");
                 }
             }
             else
