@@ -37,5 +37,6 @@ namespace tibs.stem.Products.Dto
         public virtual string CreatedBy { get; set; }
         public virtual string LastModifiedBy { get; set; }
         public DateTime DCreationTime { get; set; }
+        public int? RefId { get; set; }
     }
 }

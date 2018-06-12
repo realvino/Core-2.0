@@ -130,6 +130,7 @@ namespace tibs.stem.Products
                               Height = a.Height,
                               Depth = a.Depth,
                               Dimention = "",
+                              RefId = a.RefId,
                               ProductStateId = a.ProductStateId,
                               ProductState = a.ProductState.Name,
                               BafcoMade = a.ProductSpecificationId > 0 ? a.ProductSpecifications.BafcoMade : false,
@@ -174,6 +175,14 @@ namespace tibs.stem.Products
                 if (quotaion != null)
                 {
                     data.IsQuotation = true;
+                }
+
+                if (data.RefId > 0)
+                {
+                    var pro = _productRepository.GetAll().Where(p => p.Id == data.RefId).Select(x => x.ProductSpecifications).FirstOrDefault();
+                    data.BafcoMade = pro != null ? pro.BafcoMade : false;
+                    data.CategoryName = pro.ProductGroups.ProductCategorys.Name ?? "";
+
                 }
             }
 

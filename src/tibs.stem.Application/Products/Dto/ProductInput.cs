@@ -22,6 +22,7 @@ namespace tibs.stem.Products.Dto
         public virtual int Depth { get; set; }
         public virtual int Height { get; set; }
         public virtual int? ProductStateId { get; set; }
+        public virtual int? RefId { get; set; }
 
     }
 }
