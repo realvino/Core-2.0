@@ -14,10 +14,10 @@ namespace tibs.stem.Quotationss.Exporting
         public FileDto ExportToFile(List<QuotationReportListDto> QuotationReportList, QuotationReportListDto TotalReport)
         {
             return CreateExcelPackage(
-                QuotationReportList[0].AccountManager+".xlsx",
+                "ForecastReport for " + QuotationReportList[0].AccountManager+".xlsx",
                 excelPackage =>
                 {
-                    var sheet = excelPackage.Workbook.Worksheets.Add(L(QuotationReportList[0].AccountManager));
+                    var sheet = excelPackage.Workbook.Worksheets.Add(L("ForecastReport for "+QuotationReportList[0].AccountManager));
                     sheet.OutLineApplyStyle = true;
 
                     AddHeader(
@@ -83,9 +83,20 @@ namespace tibs.stem.Quotationss.Exporting
                         sheet.Column(i).AutoFit();
                     }
 
-                    sheet.InsertRow(QuotationReportList.Count + 1, 2);
+                    sheet.InsertRow(QuotationReportList.Count + 2, 2);
+
+                    sheet.Row(QuotationReportList.Count + 3).Style.Font.Bold = true;
+
                     sheet.Cells[QuotationReportList.Count + 3, 1].Value = TotalReport.Date;
+                    sheet.Cells[QuotationReportList.Count + 3, 2].Value = "";
+                    sheet.Cells[QuotationReportList.Count + 3, 3].Value = "";
+                    sheet.Cells[QuotationReportList.Count + 3, 4].Value = "";
+                    sheet.Cells[QuotationReportList.Count + 3, 5].Value = "";
+                    sheet.Cells[QuotationReportList.Count + 3, 6].Value = "";
+                    sheet.Cells[QuotationReportList.Count + 3, 7].Value = "";
                     sheet.Cells[QuotationReportList.Count + 3, 8].Value = TotalReport.AEDValue;
+                    sheet.Cells[QuotationReportList.Count + 3, 9].Value = "";
+                    sheet.Cells[QuotationReportList.Count + 3, 10].Value = "";
                     sheet.Cells[QuotationReportList.Count + 3, 11].Value = TotalReport.WeightedAED;
                     sheet.Cells[QuotationReportList.Count + 3, 12].Value = TotalReport.Total1Value;
                     sheet.Cells[QuotationReportList.Count + 3, 13].Value = TotalReport.Total2Value;
@@ -99,6 +110,10 @@ namespace tibs.stem.Quotationss.Exporting
                     sheet.Cells[QuotationReportList.Count + 3, 21].Value = TotalReport.Total10Value;
                     sheet.Cells[QuotationReportList.Count + 3, 22].Value = TotalReport.Total11Value;
                     sheet.Cells[QuotationReportList.Count + 3, 23].Value = TotalReport.Total12Value;
+                    sheet.Cells[QuotationReportList.Count + 3, 24].Value = "";
+                    sheet.Cells[QuotationReportList.Count + 3, 25].Value = "";
+
+
 
                     int totalCol = 23;
                     for (var i = 12; i <= totalCol; i++)

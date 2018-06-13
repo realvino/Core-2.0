@@ -14,10 +14,10 @@ namespace tibs.stem.Quotationss.Exporting
         public FileDto ExportToFile(List<TeamReportListDto> AllTeamReportList, TeamReportListDto TotalReport)
         {
             return CreateExcelPackage(
-                "AllTeamReport.xlsx",
+                "ForecastReport.xlsx",
                 excelPackage =>
                 {
-                    var sheet = excelPackage.Workbook.Worksheets.Add(L("AllTeamReport"));
+                    var sheet = excelPackage.Workbook.Worksheets.Add(L("ForecastReport"));
                     sheet.OutLineApplyStyle = true;
 
                     AddHeader(
@@ -63,7 +63,10 @@ namespace tibs.stem.Quotationss.Exporting
                         sheet.Column(i).AutoFit();
                     }
 
-                    sheet.InsertRow(AllTeamReportList.Count + 1, 2);
+                    sheet.InsertRow(AllTeamReportList.Count + 2, 2);
+
+                    sheet.Row(AllTeamReportList.Count + 3).Style.Font.Bold = true;
+
                     sheet.Cells[AllTeamReportList.Count + 3, 1].Value = TotalReport.TeamName;
                     sheet.Cells[AllTeamReportList.Count + 3, 2].Value = TotalReport.TotalAEDValue;
                     sheet.Cells[AllTeamReportList.Count + 3, 3].Value = TotalReport.TotalWeightedAED;
