@@ -939,7 +939,29 @@
     <text name="BuildingName" value="Building Name" />
     <text name="WhyBafco" value="WhyBafco" />
     <text name="NextActivity" value="Next Activity" />
-    <text name="OpportunityRefNo" value="Opportunity Ref No" />
+    <text name="OpportunityRefNo" value="Opportunity Ref No" />      
+    <text name="Jun-2018" value="Jun-2018" />
+    <text name="Jul-2018" value="Jul-2018" />  
+    <text name="Aug-2018" value="Aug-2018" />
+    <text name="Sep-2018" value="Sep-2018" />  
+    <text name="Oct-2018" value="Oct-2018" />
+    <text name="Nov-2018" value="Nov-2018" />  
+    <text name="Dec-2018" value="Dec-2018" />
+    <text name="Jan-2019" value="Jan-2019" />  
+    <text name="Feb-2019" value="Feb-2019" />
+    <text name="Mar-2019" value="Mar-2019" />  
+    <text name="Apr-2019" value="Apr-2019" />
+    <text name="May-2019" value="May-2019" />  
+    <text name="Jun-2019" value="Jun-2019" /> 
+    
+    <text name="WeightedAED" value="Weighted AED" />  
+    <text name="Percentage" value="Percentage" />  
+    <text name="Stage" value="Stage" />  
+    <text name="AEDValue" value="AED Value" />  
+    <text name="New/Existing" value="New/Existing" />  
+    <text name="AccountManager" value="Salesperson" />  
+    <text name="ActionDate" value="Action Date" />
+    <text name="Notes" value="Note" />
 
   </texts>
 </localizationDictionary>

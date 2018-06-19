@@ -24,7 +24,7 @@ namespace tibs.stem.Quotationss.Exporting
                         sheet,
                         L("AccountManager"),
                         L("AEDValue"),
-                        L("WeightedAEDValue"),
+                        L("WeightedAED"),
                         L(TeamReportList[0].Total1ValueFormat),
                         L(TeamReportList[0].Total2ValueFormat),
                         L(TeamReportList[0].Total3ValueFormat),

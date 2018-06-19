@@ -219,7 +219,7 @@ namespace tibs.stem.Quotationss
                     u.NewCompanys.Name.Contains(input.Filter) ||
                     u.Quotationstatus.Name.Contains(input.Filter)
                     );
-
+            System.Globalization.CultureInfo info = System.Globalization.CultureInfo.GetCultureInfo("en");
             var reg = (from r in query
                        join ur in UserManager.Users on r.CreatorUserId equals ur.Id
 
@@ -251,6 +251,7 @@ namespace tibs.stem.Quotationss
                            Void = r.Void,
                            InquiryName = r.InquiryId > 0 ? r.Inquiry.Name : "",
                            Total = r.IsVat == true ? (r.Negotiation == true ? r.Total - r.OverAllDiscountAmount : r.Total) + r.VatAmount : r.Negotiation == true ? r.Total - r.OverAllDiscountAmount : r.Total,
+                           Stotal = (r.IsVat == true ? (r.Negotiation == true ? r.Total - r.OverAllDiscountAmount : r.Total) + r.VatAmount : r.Negotiation == true ? r.Total - r.OverAllDiscountAmount : r.Total).ToString("N2", info),
                            CreatedBy = ur.UserName ?? "",
                            CreatorUserId = r.CreatorUserId ?? 0,
                            CompatitorName = r.CompatitorId > 0 ? r.Compatitors.Name : "",
@@ -1196,15 +1197,22 @@ namespace tibs.stem.Quotationss
                 {
                     quotation.VatAmount = (quotation.Total * quotation.Vat) / 100;
                 }
-                if (input.Approval == false && qapp == true)
-                {
-                    quotation.DiscountEmail = true;
-                }
+                 if ( qpcount >= 2)
+                            {
+                                quotation.DiscountEmail = true;
+                            } else if (qpcount == 0 && input.Approval == true)
+                            {
+                                quotation.DiscountEmail = false;
+                            }
+                else if(input.Approval == true && qapp == false)
+                                {
+                                 quotation.DiscountEmail = false;
+                                }
+                             else
+                                {
+                                quotation.DiscountEmail = true;
+                                }
 
-                if (input.Approval == true && qpcount < 2)
-                {
-                    quotation.DiscountEmail = false;
-                }
                 await _quotationRepository.UpdateAsync(quotation);
             }
             else
@@ -1542,15 +1550,17 @@ namespace tibs.stem.Quotationss
 
             await _quotationRepository.UpdateAsync(quotation);
         }
-        public async Task SetDiscountForProducts(int QuotationId, Decimal NewDiscount)
+        public async Task SetDiscountForProducts(int TypeId,int QuotationId, Decimal NewDiscount)
         {
             ConnectionAppService db = new ConnectionAppService();
             DataTable ds = new DataTable();
             using (SqlConnection conn = new SqlConnection(db.ConnectionString()))
             {
                 SqlCommand sqlComm = new SqlCommand("Sp_SetDiscountForQuotationProducts", conn);
+                sqlComm.Parameters.AddWithValue("@TypeId", TypeId);
                 sqlComm.Parameters.AddWithValue("@QuotationId", QuotationId);
                 sqlComm.Parameters.AddWithValue("@NewDiscount", NewDiscount);
+
                 sqlComm.CommandType = CommandType.StoredProcedure;
                 conn.Open();
                 sqlComm.ExecuteNonQuery();

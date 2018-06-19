@@ -261,7 +261,7 @@ namespace tibs.stem.Tenants.Dashboard
                                    LastActivity = Convert.ToDateTime(dr["LastActivity"]),
                                    Company = Convert.ToString(dr["Company"]),
                                    Stage = Convert.ToString(dr["Stage"]),
-                                   Total = Convert.ToDecimal(dr["Total"]),
+                                   Total = Convert.ToString(dr["Total"]),
                                    StageName = Convert.ToString(dr["StageName"]),
                                    MileStone = Convert.ToString(dr["Milestone"])
                                }).ToList();
@@ -306,7 +306,7 @@ namespace tibs.stem.Tenants.Dashboard
                                    LastActivity = Convert.ToDateTime(dr["LastActivity"]),
                                    Company = Convert.ToString(dr["Company"]),
                                    Stage = Convert.ToString(dr["Stage"]),
-                                   Total = Convert.ToDecimal(dr["Total"]),
+                                   Total = Convert.ToString(dr["Total"]),
                                    StageName = Convert.ToString(dr["StageName"]),
                                    MileStone = Convert.ToString(dr["Milestone"])
                                });

@@ -114,7 +114,7 @@ namespace tibs.stem.Inquirys.Dto
         public string CoordinatorImage { get; set; }
         public string QuotationsNew { get; set; }
         public virtual bool Lost { get; set; }
-
+        public bool Strike { get; set; } 
     }
     public class ActivityColor
     {

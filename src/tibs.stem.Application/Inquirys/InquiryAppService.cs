@@ -1934,7 +1934,8 @@ namespace tibs.stem.Inquirys
                                     IsLast = Convert.ToBoolean(dr["IsLastActivity"]),
                                     IsOptional= Convert.ToBoolean(dr["Optional"]),
                                     Browcerinfo = Convert.ToString(dr["DateString"]),
-                                    ContactId = Convert.ToInt32(dr["ContactId"])
+                                    ContactId = Convert.ToInt32(dr["ContactId"]),
+                                    Strike = Convert.ToBoolean(dr["Strike"])
 
                                 });
 
@@ -1962,7 +1963,7 @@ namespace tibs.stem.Inquirys
             foreach (var newsts in SupportMileStones)
             {
 
-                var TotValue = (from r in NewStatuss where r.MileStoneId == newsts.Id select r).Sum(p => p.EstimationValue);
+                var TotValue = (from r in NewStatuss where r.MileStoneId == newsts.Id && r.Strike == false select r).Sum(p => p.EstimationValue);
 
                 SubListout.Add(new TickectRegistrationOutput
                 {
@@ -1980,7 +1981,7 @@ namespace tibs.stem.Inquirys
 
             foreach (var Qnewsts in QSupportMileStones)
             {
-                var TotValue = (from r in NewStatuss where r.MileStoneId == Qnewsts.Id select r).Sum(p => p.EstimationValue);
+                var TotValue = (from r in NewStatuss where r.MileStoneId == Qnewsts.Id && r.Strike == false select r).Sum(p => p.EstimationValue);
                 SubListout.Add(new TickectRegistrationOutput
                 {
                     Name = Qnewsts.MileStoneName,

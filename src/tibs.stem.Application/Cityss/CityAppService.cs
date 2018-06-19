@@ -19,6 +19,10 @@ using tibs.stem.Dto;
 using System.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Drawing;
+using NPOI.HSSF.UserModel;
+using System.IO;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 
 namespace tibs.stem.Citys
 {
@@ -221,6 +225,43 @@ namespace tibs.stem.Citys
             Color color = (Color)value;
             double Y = 0.2126 * color.R + 0.7152 * color.G + 0.0722 * color.B;
             return Y > 0.4 ? Brushes.Black : Brushes.White;
+        }
+
+        public void Convertexcel()
+        {
+            string pathSource = @"D:\Excel\Quote.xlsx";
+
+            IWorkbook templateWorkbook;
+            using (FileStream fs = new FileStream(pathSource, FileMode.Open, FileAccess.Read))
+            {
+                templateWorkbook = new XSSFWorkbook(fs);
+            }
+
+            string sheetName = "Quote";
+            ISheet sheet = templateWorkbook.GetSheet(sheetName) ?? templateWorkbook.CreateSheet(sheetName);
+            IRow dataRow = sheet.GetRow(18) ?? sheet.CreateRow(18);
+            ICell cell2 = dataRow.GetCell(2) ?? dataRow.CreateCell(2);
+            ICell cell3 = dataRow.GetCell(3) ?? dataRow.CreateCell(3);
+            ICell cell4 = dataRow.GetCell(4) ?? dataRow.CreateCell(4);
+            ICell cell5 = dataRow.GetCell(5) ?? dataRow.CreateCell(5);
+            ICell cell6 = dataRow.GetCell(6) ?? dataRow.CreateCell(6);
+            ICell cell7 = dataRow.GetCell(7) ?? dataRow.CreateCell(7);
+            ICell cell8 = dataRow.GetCell(8) ?? dataRow.CreateCell(8);
+
+            cell2.SetCellValue("foo");
+            cell3.SetCellValue("foo");
+            cell4.SetCellValue("foo");
+            cell5.SetCellValue("foo");
+            cell6.SetCellValue("foo");
+            cell7.SetCellValue("foo");
+            cell8.SetCellValue("foo");
+
+
+
+            using (FileStream fs = new FileStream(pathSource, FileMode.Create, FileAccess.Write))
+            {
+                templateWorkbook.Write(fs);
+            }
         }
 
     }

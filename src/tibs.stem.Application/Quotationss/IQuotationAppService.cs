@@ -35,7 +35,7 @@ namespace tibs.stem.Quotationss
         Task<int> QuotationRevision(QuotationRevisionInput input);
         Task<PagedResultDto<QuotationListDto>> GetRevisedQuotation(NullableIdDto input);
         Task UpdateQuotationVatAmount(NullableIdDto input);
-        Task SetDiscountForProducts(int QuotationId, Decimal NewDiscount);
+        Task SetDiscountForProducts(int TypeId,int QuotationId, Decimal NewDiscount);
         Task<FileDto> GetQuotationToExcel();
         Task<PagedResultDto<QuotationReportListDto>> GetTeamEnquiryReport(QuotationReportInput input);
         Task SendDiscountMail(NullableIdDto input);

@@ -73,5 +73,6 @@ namespace tibs.stem.Quotationss.Dto
         public virtual DateTime? PaymentDate { get; set; }
         public virtual bool DiscountEmail { get; set; }
         public virtual decimal? Probability { get; set; }
+        public string Stotal { get; set; }
     }
 }

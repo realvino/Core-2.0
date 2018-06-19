@@ -25,27 +25,27 @@ namespace tibs.stem.Inquirys.Exporting
                         L("TitleOfEnquiry"),
                         L("CompanyName"),
                         L("Milestone"),
+                        L("NextActivity"),
+                        L("ClosureDate"),
+                        L("CreatedBy"),
+                        L("AssignTo"),
                         L("DepartmentName"),
                         L("TeamName"),
-                        L("AssignTo"),
-                        L("ClosureDate"),
-                        L("NextActivity"),
-                        L("CreatedBy"),
                         L("CreationTime")
                         );
 
                     AddObjects(
                         sheet, 2, salesInquiryListDtos,
-                       _ => _.SubMmissionId,
+                        _ => _.SubMmissionId,
                         _ => _.Name,
                         _ => _.CompanyName,
                         _ => _.MileStoneName,
+                        _ => _.SlastActivity,
+                        _ => _.SclosureDate,
+                        _ => _.CreatedBy,
+                        _ => _.SalesMan,
                         _ => _.DepartmentName,
                         _ => _.TeamName,
-                        _ => _.SalesMan,
-                        _ => _.SclosureDate,
-                        _ => _.SlastActivity,
-                        _ => _.CreatedBy,
                         _ => _.SCreationTime
 
                         );
