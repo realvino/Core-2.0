@@ -74,5 +74,7 @@ namespace tibs.stem.Quotationss.Dto
         public virtual bool DiscountEmail { get; set; }
         public virtual decimal? Probability { get; set; }
         public string Stotal { get; set; }
+        public int? LeadStatusId { get; set; }
+        public string LeadStatusName { get; set; }
     }
 }

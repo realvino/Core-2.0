@@ -46,15 +46,16 @@ namespace tibs.stem.Tenants.Dashboard
             RoleManager roleManager,
             IWebUrlService webUrlService,
             IRepository<EnquiryDetail> enquiryDetailRepository
-            ){
-                    _discountRepository = discountRepository;
-                    _TeamDetailRepository = TeamDetailRepository;
-                    _TeamRepository = TeamRepository;
-                    _webUrlService = webUrlService;
-                    _userRoleRepository = userRoleRepository;
-                    _roleManager = roleManager;
-                    _enquiryDetailRepository = enquiryDetailRepository;
-                }
+            )
+        {
+            _discountRepository = discountRepository;
+            _TeamDetailRepository = TeamDetailRepository;
+            _TeamRepository = TeamRepository;
+            _webUrlService = webUrlService;
+            _userRoleRepository = userRoleRepository;
+            _roleManager = roleManager;
+            _enquiryDetailRepository = enquiryDetailRepository;
+        }
 
         public GetMemberActivityOutput GetMemberActivity()
         {
@@ -130,8 +131,8 @@ namespace tibs.stem.Tenants.Dashboard
                             select new CreateDiscountInput
                             {
                                 Id = a.Id,
-                                Discountable=a.Discountable,
-                                UnDiscountable=a.UnDiscountable,
+                                Discountable = a.Discountable,
+                                UnDiscountable = a.UnDiscountable,
                                 QuotationDescription = a.QuotationDescription,
                                 Vat = a.Vat
                             }).FirstOrDefault();
@@ -158,15 +159,15 @@ namespace tibs.stem.Tenants.Dashboard
         {
             var discount = input.MapTo<Discount>();
 
-             await _discountRepository.InsertAsync(discount);
-            
+            await _discountRepository.InsertAsync(discount);
+
         }
 
         public async Task UpdateDiscount(CreateDiscountInput input)
         {
             var discount = input.MapTo<Discount>();
-            
-             await _discountRepository.UpdateAsync(discount);          
+
+            await _discountRepository.UpdateAsync(discount);
 
         }
 
@@ -201,7 +202,7 @@ namespace tibs.stem.Tenants.Dashboard
         }
         public async Task<Array> GetLeadSummaryGraph(GraphInput input)
         {
-            
+
             ConnectionAppService db = new ConnectionAppService();
             DataTable viewtable = new DataTable();
             using (SqlConnection con = new SqlConnection(db.ConnectionString()))
@@ -237,7 +238,7 @@ namespace tibs.stem.Tenants.Dashboard
             {
                 SqlCommand sqlComm = new SqlCommand("Sp_RecentClosureInquiry", con);
                 sqlComm.Parameters.AddWithValue("@TeamId", input.TeamId);
-                sqlComm.Parameters.AddWithValue("@SalesId", input.SalesId); 
+                sqlComm.Parameters.AddWithValue("@SalesId", input.SalesId);
 
                 sqlComm.CommandType = CommandType.StoredProcedure;
                 using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
@@ -321,7 +322,76 @@ namespace tibs.stem.Tenants.Dashboard
                 return SubListout;
             }
         }
-        public List<SliderDataList> GetSalesExecutive(String datainput,bool IsSales)
+        public async Task<GetSalesLeadList> GetSalesLeadSummary()
+        {
+
+            List<SalesLeads> cl = new List<SalesLeads>();
+            GetSalesLeadList cc = new GetSalesLeadList();
+            ConnectionAppService db = new ConnectionAppService();
+            DataTable viewtable = new DataTable();
+            using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+            {
+                SqlCommand sqlComm = new SqlCommand("PrintCustomers_Cursor", con)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                con.Open();
+                using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                {
+                    da.Fill(viewtable);
+                }
+                con.Close();
+                var data = (from DataRow dr in viewtable.Rows
+                            select new SalesLeadListDto
+                            {
+                                Id = Convert.ToInt32(dr["Id"]),
+                                Name = Convert.ToString(dr["Name"]),
+                                Total = Convert.ToInt32(dr["Total"]),
+                                Counts = Convert.ToInt32(dr["Counts"]),
+                                SourceName = Convert.ToString(dr["SourceName"])
+                            });
+
+                var datas = data.ToArray();
+
+                int j = 0;
+                foreach (var st in datas.Select(p => p.Name).ToList().Distinct())
+                {
+                    double[] arr = new double[datas.Where(p => p.Name == st).Select(p => p.SourceName).ToList().Count()];
+                    string[] arrn = new string[datas.Where(p => p.Name == st).Select(p => p.SourceName).ToList().Count()];
+
+                    var status = st;
+
+                    int k = 0;
+
+                    foreach (var d in datas.Where(p => p.Name == st).Select(p => p.SourceName).ToList())
+                    {
+
+                        var da = datas.Where(p => p.Name == st && p.SourceName == d).Select(p => p.Counts).FirstOrDefault();
+                        if (da > 0)
+                        {
+                            arr[k] = (int)da;
+                        }
+                        else
+                        {
+                            arr[k] = 0;
+                        }
+
+                        if (j == 0)
+                            arrn[k] = d;
+
+                        k++;
+                    }
+                    cl.Add(new SalesLeads { Data = arr.ToArray(), Name = st });
+                    if (j == 0)
+                        cc.Catagries = arrn;
+
+                    j++;
+                }
+                cc.LeadDevelop = cl.ToArray();
+            }
+            return cc;
+        }
+        public List<SliderDataList> GetSalesExecutive(String datainput, bool IsSales)
         {
             var Datas = new List<SliderDataList>();
 
@@ -329,7 +399,7 @@ namespace tibs.stem.Tenants.Dashboard
 
             if (string.IsNullOrEmpty(datainput) == false && IsSales == false)
             {
-                    viewquery = viewquery + "  WHERE TeamId in(0,"+ datainput + ")";
+                viewquery = viewquery + "  WHERE TeamId in(0," + datainput + ")";
             }
             if (string.IsNullOrEmpty(datainput) == false && IsSales == true)
             {
@@ -408,8 +478,10 @@ namespace tibs.stem.Tenants.Dashboard
             {
                 team = (from r in _TeamRepository.GetAll()
                         join c in _TeamDetailRepository.GetAll() on r.Id equals c.TeamId
-                        into cJoined from c in cJoined.DefaultIfEmpty()
-                        where c.SalesmanId == userid select r).ToArray();
+                        into cJoined
+                        from c in cJoined.DefaultIfEmpty()
+                        where c.SalesmanId == userid
+                        select r).ToArray();
                 if (team.Length > 0)
                 {
                     var teamlist = (from r in team
@@ -440,10 +512,36 @@ namespace tibs.stem.Tenants.Dashboard
                     sr.selectDdata = teamlist.ToArray();
                 }
             }
-           
+
             return sr;
         }
+        public async Task<Array> GetSalesLeadBreakdown()
+        {
 
+            List<SalesLeads> cl = new List<SalesLeads>();
+            GetSalesLeadList cc = new GetSalesLeadList();
+            ConnectionAppService db = new ConnectionAppService();
+            DataTable viewtable = new DataTable();
+            using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+            {
+                SqlCommand sqlComm = new SqlCommand("LeadBreakDown", con)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                con.Open();
+                using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                {
+                    da.Fill(viewtable);
+                }
+                con.Close();
+                var data = (from DataRow dr in viewtable.Rows
+                            select new LeadsBreakdown
+                            {
+                                Count = Convert.ToInt32(dr["Counts"]),
+                                Name = Convert.ToString(dr["Source"]),
+                            });
+                return data.ToArray();
+            }
+        }
     }
-
 }

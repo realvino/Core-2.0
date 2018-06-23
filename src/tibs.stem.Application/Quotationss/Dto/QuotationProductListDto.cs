@@ -35,6 +35,6 @@ namespace tibs.stem.Quotationss.Dto
         public virtual string TemporaryCode { get; set; }
         public virtual string ImageUrl { get; set; }
         public virtual DateTime CreationTime { get; set; }
-
+        public virtual string Description { get; set; }
     }
 }

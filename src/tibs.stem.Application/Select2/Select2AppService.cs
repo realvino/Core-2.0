@@ -1970,35 +1970,6 @@ namespace tibs.stem.Select2
                 UserDto = query.ToList();
 
             }
-            else if (userrole.DisplayName == "Designer")
-            {
-                query = (from U in UserManager.Users
-                         join TD in _TeamDetailRepository.GetAll() on U.Id equals TD.SalesmanId
-                         join R in _userRoleRepository.GetAll() on TD.SalesmanId equals R.UserId
-                         where TD.SalesmanId == 0 && R.RoleId == 4
-                         select new userprofiledto
-                         {
-                             Id = U.Id,
-                             Name = U.UserName,
-                             ProfilePictureId = U.ProfilePictureUrl
-                         });
-                UserDto = query.ToList();
-
-            }
-            else if (userrole.DisplayName == "Sales Coordinator")
-            {
-                query = (from U in UserManager.Users
-                         join TD in _TeamDetailRepository.GetAll() on U.Id equals TD.SalesmanId
-                         join R in _userRoleRepository.GetAll() on TD.SalesmanId equals R.UserId
-                         where TD.SalesmanId == 0 && R.RoleId == 4
-                         select new userprofiledto
-                         {
-                             Id = U.Id,
-                             Name = U.UserName,
-                             ProfilePictureId = U.ProfilePictureUrl
-                         });
-                UserDto = query.ToList();
-            }
             else
             {
                 query = (from U in UserManager.Users
@@ -2225,6 +2196,124 @@ namespace tibs.stem.Select2
 
             return sr;
         }
+        public async Task<Select3UserResult> GetDesignerProfile()
+        {
+            List<userprofiledto> UserDto = new List<userprofiledto>();
+
+            Select3UserResult sr = new Select3UserResult();
+            long userid = (int)AbpSession.UserId;
+            var userrole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
+
+            var query = (from U in UserManager.Users
+                         where U.Id == 0
+                         select new userprofiledto
+                         {
+                         });
+
+
+            if (userrole.DisplayName != "Designer")
+            {
+                query = (from U in UserManager.Users
+                         join R in _userRoleRepository.GetAll() on U.Id equals R.UserId
+                         where R.RoleId == 7
+
+                         select new userprofiledto
+                         {
+                             Id = U.Id,
+                             Name = U.UserName,
+                             ProfilePictureId = U.ProfilePictureUrl
+                         });
+
+                UserDto = query.ToList();
+
+                UserDto.Add(new userprofiledto
+                {
+                    Id = 1002,
+                    Name = "W/O Designer",
+                    ProfilePictureId = "Common/Profile/default-profile-picture.png",
+                });
+            }
+            else if (userrole.DisplayName == "Designer")
+            {
+                query = (from U in UserManager.Users
+                         join R in _userRoleRepository.GetAll() on U.Id equals R.UserId
+                         where R.RoleId == 7 && U.Id == userid
+                         select new userprofiledto
+                         {
+                             Id = U.Id,
+                             Name = U.UserName,
+                             ProfilePictureId = U.ProfilePictureUrl
+                         });
+                UserDto = query.ToList();
+            }
+
+            sr.select3data = UserDto.ToArray();
+
+            return sr;
+        }
+        public async Task<Select3UserResult> GetCoordinatrProfile()
+        {
+            List<userprofiledto> UserDto = new List<userprofiledto>();
+
+            Select3UserResult sr = new Select3UserResult();
+            long userid = (int)AbpSession.UserId;
+            var userrole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
+
+            var query = (from U in UserManager.Users
+                         where U.Id == 0
+                         select new userprofiledto
+                         {
+                         });
+
+
+            if (userrole.DisplayName != "Sales Coordinator")
+            {
+                query = (from U in UserManager.Users
+                         join R in _userRoleRepository.GetAll() on U.Id equals R.UserId
+                         where R.RoleId == 6
+
+                         select new userprofiledto
+                         {
+                             Id = U.Id,
+                             Name = U.UserName,
+                             ProfilePictureId = U.ProfilePictureUrl
+                         });
+                UserDto = query.ToList();
+                UserDto.Add(new userprofiledto
+                {
+                    Id = 1001,
+                    Name = "W/O Coordinator",
+                    ProfilePictureId = "Common/Profile/default-profile-picture.png",
+                });
+
+            }
+            else if (userrole.DisplayName == "Sales Coordinator")
+            {
+                query = (from U in UserManager.Users
+                         join R in _userRoleRepository.GetAll() on U.Id equals R.UserId
+                         where R.RoleId == 6 && U.Id == userid
+                         select new userprofiledto
+                         {
+                             Id = U.Id,
+                             Name = U.UserName,
+                             ProfilePictureId = U.ProfilePictureUrl
+                         });
+                UserDto = query.ToList();
+            }
+
+            sr.select3data = UserDto.ToArray();
+
+            return sr;
+        }
+
     }
     public class categorydto
     {

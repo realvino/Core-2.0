@@ -1831,10 +1831,10 @@ namespace tibs.stem.Inquirys
         {
             string viewquery = "SELECT * FROM [dbo].[View_Inquiry]";
             long userid = (int)AbpSession.UserId;
-            if (input.SalesId > 0)
-            {
-                userid = input.SalesId;
-            }
+            //if (input.SalesId > 0)
+            //{
+            //    userid = input.SalesId;
+            //}
             var userrole = (from c in UserManager.Users
                             join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
                             join role in _roleManager.Roles on urole.RoleId equals role.Id
@@ -1842,17 +1842,9 @@ namespace tibs.stem.Inquirys
                             select role).FirstOrDefault();
             var query = _inquiryRepository.GetAll().Where(r => r.Id == 0);
 
-
             if (userrole.DisplayName == "Sales Executive")
             {
                 viewquery = "SELECT * FROM [dbo].[View_Inquiry]  where AssignedbyId=" + userid.ToString();
-            }
-            else if (userrole.DisplayName == "Sales Manager / Sales Executive")
-            {
-                if (input.SalesId > 0)
-                    viewquery = "SELECT * FROM [dbo].[View_Inquiry]  where AssignedbyId = " + userid.ToString();
-                else
-                    viewquery = "SELECT * FROM [dbo].[View_Inquiry]  where SalesManagerId=" + userid.ToString();
             }
             else if (userrole.DisplayName == "Sales Manager")
             {
@@ -1866,10 +1858,38 @@ namespace tibs.stem.Inquirys
             {
                 viewquery = "SELECT * FROM [dbo].[View_Inquiry] where CoordinatorId=" + userid.ToString();
             }
+            else if (userrole.DisplayName == "Sales Manager / Sales Executive")
+            {
+                    viewquery = "SELECT * FROM [dbo].[View_Inquiry]  where SalesManagerId=" + userid.ToString();
+            }
             else
             {
-                viewquery = "SELECT * FROM [dbo].[View_Inquiry]";
+                viewquery = "SELECT * FROM [dbo].[View_Inquiry] where Id > 0 ";
             }
+
+            if ( input.SalesId > 0)
+            {
+                viewquery = viewquery + " and AssignedbyId =" + input.SalesId.ToString();
+            }
+
+            if (input.DesignerId == 1002)
+            {
+                viewquery = viewquery + " and DesignerId = 0";
+            }
+            else if (input.DesignerId > 0)
+            {
+                viewquery = viewquery + " and DesignerId =" + input.DesignerId.ToString();
+            }
+
+            if (input.CoordinatorId == 1001)
+            {
+                viewquery = viewquery + " and CoordinatorId = 0";
+            }
+            else if (input.CoordinatorId > 0)
+            {
+                viewquery = viewquery + " and CoordinatorId =" + input.CoordinatorId.ToString();
+            }
+
 
             var SupportMileStones = (from r in _milestoneRepository.GetAll() where r.Id > 3 && r.IsQuotation == false select r).ToArray();
             var QSupportMileStones = (from r in _milestoneRepository.GetAll() where r.Id > 3 && r.IsQuotation == true select r).ToArray();

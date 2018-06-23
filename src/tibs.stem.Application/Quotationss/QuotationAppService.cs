@@ -45,6 +45,9 @@ using tibs.stem.Authorization.Users;
 using tibs.stem.AcitivityTracks;
 using tibs.stem.Inquirys.Dto;
 using tibs.stem.Views;
+using NPOI.SS.UserModel;
+using System.IO;
+using NPOI.XSSF.UserModel;
 
 namespace tibs.stem.Quotationss
 {
@@ -354,21 +357,23 @@ namespace tibs.stem.Quotationss
                                       Negotiation = a.Negotiation,
                                       NegotiationDate = a.NegotiationDate,
                                       PaymentDate = a.PaymentDate,
-                                      DiscountEmail = a.DiscountEmail
+                                      DiscountEmail = a.DiscountEmail,
+                                      LeadStatusId = 0,
+                                      LeadStatusName = ""
                                   }).FirstOrDefault();
 
 
                 var data = (from r in _quotationProductRepository.GetAll() where r.QuotationId == input.Id where r.Approval == true select r.TotalAmount).Sum();
                 if (data > 0)
                 {
-                    quotations.Total = data;
-                    quotations.TotalFormat = data.ToString("N", new CultureInfo("en-US"));
+                        quotations.Total = data;
+                        quotations.TotalFormat = data.ToString("N", new CultureInfo("en-US"));
                 }
                 var data2 = (from r in _quotationProductRepository.GetAll() where r.QuotationId == input.Id where r.Approval == false select r.OverAllPrice).Sum();
                 if (data2 > 0)
                 {
-                    quotations.Total = quotations.Total + data2;
-                    quotations.TotalFormat = (quotations.Total).ToString("N", new CultureInfo("en-US"));
+                        quotations.Total = quotations.Total + data2;
+                        quotations.TotalFormat = (quotations.Total).ToString("N", new CultureInfo("en-US"));
                 }
 
                 var TotalValue = quotations.Optional == true ? quotations.Total : (from r in _quotationProductRepository.GetAll() where r.QuotationId == input.Id select r.OverAllPrice).Sum();
@@ -377,28 +382,17 @@ namespace tibs.stem.Quotationss
 
                 if (TotalValue > 0)
                 {
-                    quotations.Discount = (float)(Math.Round((TotalDiscount * 100) / TotalValue, 2));
-                    quotations.DiscountAmount = TotalDiscount;
-                    quotations.DiscountAmountFormat = TotalDiscount.ToString("N", new CultureInfo("en-US"));
+                        quotations.Discount = (float)(Math.Round((TotalDiscount * 100) / TotalValue, 2));
+                        quotations.DiscountAmount = TotalDiscount;
+                        quotations.DiscountAmountFormat = TotalDiscount.ToString("N", new CultureInfo("en-US"));
 
                 }
 
                 if (quotations.SalesPersonId > 0)
                 {
-                    byte[] bytes = new byte[0];
-                    var Account = (from c in UserManager.Users where c.Id == (long)quotations.SalesPersonId select c).FirstOrDefault();
-                    var profilePictureId = Account.ProfilePictureId;
-                    quotations.SalespersonImage = "/assets/common/images/default-profile-picture.png";
-                    if (profilePictureId != null)
-                    {
-                        var file = await _binaryObjectManager.GetOrNullAsync((Guid)profilePictureId);
-                        if (file != null)
-                        {
-                            bytes = file.Bytes;
-                            GetProfilePictureOutput img = new GetProfilePictureOutput(Convert.ToBase64String(bytes));
-                            quotations.SalespersonImage = "data:image/jpeg;base64," + img.ProfilePicture;
-                        }
-                    }
+                        byte[] bytes = new byte[0];
+                        var Account = (from c in UserManager.Users where c.Id == (long)quotations.SalesPersonId select c).FirstOrDefault();
+                        quotations.SalespersonImage = Account.ProfilePictureUrl;
                 }
                 var leadDetail = _LeadDetailRepository.GetAll().Where(p => p.InquiryId == quotations.InquiryId).FirstOrDefault();
                 if (leadDetail != null)
@@ -409,29 +403,20 @@ namespace tibs.stem.Quotationss
                         byte[] bytes = new byte[0];
                         var Account = (from c in UserManager.Users where c.Id == (long)leadDetail.DesignerId select c).FirstOrDefault();
                         quotations.DesignerName = Account.UserName;
-                        var profilePictureId = Account.ProfilePictureId;
-                        quotations.DesignerImage = "/assets/common/images/default-profile-picture.png";
-                        if (profilePictureId != null)
-                        {
-                            var file = await _binaryObjectManager.GetOrNullAsync((Guid)profilePictureId);
-                            if (file != null)
-                            {
-                                bytes = file.Bytes;
-                                GetProfilePictureOutput img = new GetProfilePictureOutput(Convert.ToBase64String(bytes));
-                                quotations.DesignerImage = "data:image/jpeg;base64," + img.ProfilePicture;
-                            }
-                        }
+                        quotations.DesignerImage = Account.ProfilePictureUrl;
                     }
+                }
+
+                var leadstatus = _inquiryRepository.GetAll().Where(p => p.Id == quotations.InquiryId).Select(C => C.LeadStatuss).FirstOrDefault();
+                if (leadstatus != null)
+                {
+                    quotations.LeadStatusId = leadstatus.Id;
+                    quotations.LeadStatusName = leadstatus.LeadStatusName;
                 }
 
                 output.quotation = quotations.MapTo<QuotationListDto>();
             }
-            //else
-            //{
 
-            //    throw new UserFriendlyException("Ooops!", "The requested Quotation Id is not valid '" + input.Id + "'...");
-
-            //}
             return output;
         }
         public async Task<GetQuotation> GetQuotationRevisionForEdit(NullableIdDto input)
@@ -3051,6 +3036,137 @@ namespace tibs.stem.Quotationss
 
             return _AllTeamReportExcelExporter.ExportToFile(TeamListDtos, TotalReport);
 
+        }
+        public void StandardPreviewExcel(NullableIdDto input)
+        {
+            var sectionGroup = (from r in _sectionRepository.GetAll() where r.QuotationId == input.Id select r).ToArray();
+            var query = _quotationProductRepository.GetAll().Where(p => p.QuotationId == input.Id);
+
+            var reg = (from r in query
+                       select new QuotationProductListDto
+                       {
+                           Id = r.Id,
+                           ProductCode = r.ProductId > 0 ? r.product.ProductCode : r.ProductCode,
+                           Quantity = r.Quantity,
+                           Discount = r.Discount,
+                           UnitOfMeasurement = r.UnitOfMeasurement,
+                           UnitOfPrice = r.UnitOfPrice,
+                           TotalAmount = r.Approval == true ? r.TotalAmount : r.OverAllPrice,
+                           //ProductId = r.ProductId,
+                           //ProductName = r.ProductId != null ? r.product.ProductName : "",
+                           //QuotationId = r.QuotationId,
+                           //RefNo = r.QuotationId > 0 ? r.quotation.RefNo : "",
+                           SectionId = r.SectionId,
+                           SectionName = r.SectionId != null ? r.section.Name : "",
+                           Locked = r.Locked,
+                           //Approval = r.Approval,
+                           //Discountable = r.Discountable,
+                           CreationTime = r.CreationTime,
+                           TemporaryProductId = r.TemporaryProductId,
+                           Description = r.ProductId > 0 ? r.product.Description : r.TemporaryProducts.Description
+
+                       }).ToList();
+
+            //foreach (var data in reg)
+            //{
+            //    if (data.TemporaryProductId > 0)
+            //    {
+            //        var TempImage = _TempProductImageRepository.GetAll().Where(p => p.TemporaryProductId == data.TemporaryProductId).FirstOrDefault();
+            //        if (TempImage != null)
+            //        {
+            //            data.ImageUrl = TempImage.ImageUrl;
+            //        }
+            //    }
+            //    else if (data.ProductId > 0)
+            //    {
+            //        var Image = _ProductImageRepository.GetAll().Where(q => q.ProductId == data.ProductId).FirstOrDefault();
+            //        if (Image != null)
+            //        {
+            //            data.ImageUrl = Image.ImageUrl;
+            //        }
+            //    }
+
+            //}
+
+            var QuotationProductListDtos = reg.MapTo<List<QuotationProductListDto>>();
+
+            var SubListout = new List<QuotationProductOutput>();
+
+            foreach (var newsts in sectionGroup)
+            {
+                var subtotal = (from r in reg where r.SectionId == newsts.Id select r.TotalAmount).Sum();
+                SubListout.Add(new QuotationProductOutput
+                {
+                    name = newsts.Name,
+                    subtotal = subtotal,
+                    //subtotalFormat = subtotal.ToString("N", new CultureInfo("en-US")),
+                    GetQuotationProduct = (from r in reg where r.SectionId == newsts.Id select r).OrderBy(p => p.CreationTime).ToArray()
+                });
+            }
+
+            string pathSource = @"E:\Excel\StandardQuote.xlsx";
+
+            IWorkbook templateWorkbook;
+            using (FileStream fs = new FileStream(pathSource, FileMode.Open, FileAccess.Read))
+            {
+                templateWorkbook = new XSSFWorkbook(fs);
+            }
+
+            string sheetName = "StandardPreview3";
+            ISheet sheet = templateWorkbook.GetSheet(sheetName);
+
+            if (SubListout.Count > 0)
+            {
+                int r = 18;
+                for (int sectionIndex = 0; sectionIndex < SubListout.Count; sectionIndex++)
+                {
+                    IRow SectionRow = sheet.GetRow(15).CopyRowTo(r);
+
+                    ICell SectionCellName = SectionRow.GetCell(0);
+                    SectionCellName.SetCellValue(SubListout[sectionIndex].name);
+
+                    if (SubListout[sectionIndex].GetQuotationProduct.Length > 0)
+                    {
+                        for (int p = 0; p < SubListout[sectionIndex].GetQuotationProduct.Length; p++)
+                        {
+                            IRow ProductRow = sheet.GetRow(16).CopyRowTo(p + (r + 1));
+                            ICell ProductNo = ProductRow.GetCell(0);
+                            ICell ProductDesp = ProductRow.GetCell(1);
+                            //ICell ProductImg = ProductRow.GetCell(2);
+                            ICell ProductQty = ProductRow.GetCell(3);
+                            //ICell ProductUM = ProductRow.GetCell(4);
+                            ICell ProductUP = ProductRow.GetCell(5);
+                            //ICell ProductPD = ProductRow.GetCell(6);
+                            ICell ProductAmount = ProductRow.GetCell(7);
+
+                            ProductNo.SetCellValue(p + 1);
+                            ProductDesp.SetCellValue(SubListout[sectionIndex].GetQuotationProduct[p].Description);
+                            ProductQty.SetCellValue((double)SubListout[sectionIndex].GetQuotationProduct[p].Quantity);
+                            ProductUP.SetCellValue((double)SubListout[sectionIndex].GetQuotationProduct[p].UnitOfPrice);
+
+                            ProductAmount.SetCellFormula("IF(OR(ISBLANK(G" + (p + r + 2) + ")),(D" + (p + r + 2) + "*F" + (p + r + 2) + "),(D" + (p + r + 2) + "*G" + (p + r + 2) + "))");
+                        }
+                    }
+
+                    IRow SubTotalRow = sheet.GetRow(17).CopyRowTo(r + 1 + SubListout[sectionIndex].GetQuotationProduct.Length);
+                    ICell SubTotalCell = SubTotalRow.GetCell(7);
+                    SubTotalCell.SetCellFormula("SUM(H" + (r + 2) + ":H" + (r + 1 + SubListout[sectionIndex].GetQuotationProduct.Length) + ")");
+
+                    r = (r + 2 + SubListout[sectionIndex].GetQuotationProduct.Length);
+                }
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                IRow DeleteRow = sheet.GetRow(15);
+                sheet.RemoveRow(DeleteRow);
+                sheet.ShiftRows(16, sheet.LastRowNum, -1);
+            }
+
+            using (FileStream fs = new FileStream(pathSource, FileMode.Create, FileAccess.Write))
+            {
+                templateWorkbook.Write(fs);
+            }
         }
 
     }

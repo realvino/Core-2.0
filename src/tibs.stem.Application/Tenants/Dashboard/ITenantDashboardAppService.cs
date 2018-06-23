@@ -31,5 +31,6 @@ namespace tibs.stem.Tenants.Dashboard
         Task<RecentInquiryActivityList> GetInquiryRecentActivity(RecentInquiryInput input);
         List<SliderDataList> GetSalesExecutive(String datainput, bool IsSales);
         Task<SelectDResult> GetDashboardTeam();
+        Task<GetSalesLeadList> GetSalesLeadSummary();
     }
 }

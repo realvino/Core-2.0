@@ -24,6 +24,8 @@ namespace tibs.stem.Inquirys.Dto
     {
         public string Filter { get; set; }
         public int SalesId { get; set; }
+        public int DesignerId { get; set; }
+        public int CoordinatorId { get; set; }
 
     }
 
