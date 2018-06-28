@@ -282,12 +282,21 @@ namespace tibs.stem.EnquiryUpdates
                 _enquiryDetailRepository.UpdateAsync(inquirys);
             }
         }
-        public async Task ReverseClosed(NullableIdDto input)
+        public void ReverseClosed(NullableIdDto input)
         {
-            var inquiry = (from r in _inquiryRepository.GetAll() where r.Id == input.Id select r).FirstOrDefault();
-            var inquirys = inquiry.MapTo<Inquiry>();
-            inquirys.IsClosed = false;
-            await _inquiryRepository.UpdateAsync(inquirys);
+            ConnectionAppService db = new ConnectionAppService();
+            using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+            {
+                using (SqlCommand cmd = new SqlCommand("Sp_ClosedQuotation", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@InquiryId", SqlDbType.VarChar).Value = input.Id;
+                    cmd.Parameters.Add("@Type", SqlDbType.VarChar).Value = 2;
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                    con.Close();
+                }
+            }
 
         }
 
@@ -300,6 +309,7 @@ namespace tibs.stem.EnquiryUpdates
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("@InquiryId", SqlDbType.VarChar).Value = Id;
+                    cmd.Parameters.Add("@Type", SqlDbType.VarChar).Value = 1;
                     con.Open();
                     cmd.ExecuteNonQuery();
                     con.Close();

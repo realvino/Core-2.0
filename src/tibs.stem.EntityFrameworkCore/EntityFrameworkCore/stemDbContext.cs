@@ -29,6 +29,7 @@ using tibs.stem.EnquiryContacts;
 using tibs.stem.EnquiryDetails;
 using tibs.stem.EnquirySources;
 using tibs.stem.EnquiryStatuss;
+using tibs.stem.Finish;
 using tibs.stem.Friendships;
 using tibs.stem.ImportHistorys;
 using tibs.stem.Industrys;
@@ -166,6 +167,9 @@ namespace tibs.stem.EntityFrameworkCore
         public virtual DbSet<ReportColumn> ReportColumns { get; set; }
         public virtual DbSet<DateFilter> DateFilters { get; set; }
         public virtual DbSet<ColorGraph> ColorGraphs { get; set; }
+        public virtual DbSet<Finished> Finisheed { get; set; }
+        public virtual DbSet<FinishedDetail> FinisheedDetail { get; set; }
+
         public stemDbContext(DbContextOptions<stemDbContext> options)
             : base(options)
         {

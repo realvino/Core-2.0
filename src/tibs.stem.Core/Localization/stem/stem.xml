@@ -962,6 +962,10 @@
     <text name="AccountManager" value="Salesperson" />  
     <text name="ActionDate" value="Action Date" />
     <text name="Notes" value="Note" />
+    
+    <text name="MDashboard" value="Marketing Dashboard" />
+    <text name="SDashboard" value="Sales Dashboard" />
+
 
   </texts>
 </localizationDictionary>

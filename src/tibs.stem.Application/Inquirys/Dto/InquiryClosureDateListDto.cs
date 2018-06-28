@@ -88,6 +88,10 @@ namespace tibs.stem.Inquirys.Dto
         public string AssignedbyImage { get; set; }
         public string DesignerName { get; set; }
         public string DesignerImage { get; set; }
+        public string CoordinatorName { get; set; }
+        public string CoordinatorImage { get; set; }
+        public string Revision { get; set; }
+
 
     }
 }

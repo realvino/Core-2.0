@@ -3,6 +3,7 @@ using Abp.Collections.Extensions;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using System;
+using System.Web;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -48,6 +49,10 @@ using tibs.stem.Views;
 using NPOI.SS.UserModel;
 using System.IO;
 using NPOI.XSSF.UserModel;
+using Microsoft.Extensions.Configuration;
+using System.Net;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Hosting;
 
 namespace tibs.stem.Quotationss
 {
@@ -87,6 +92,8 @@ namespace tibs.stem.Quotationss
         private readonly ITeamEnquiryReportExcelExporter _TeamEnquiryReportExcelExporter;
         private readonly ITeamReportExcelExporter _TeamReportExcelExporter;
         private readonly IAllTeamReportExcelExporter _AllTeamReportExcelExporter;
+        public static IConfigurationRoot Configuration { get; set; }
+        private readonly IHostingEnvironment _hostingEnvironment;
 
         public QuotationAppService(
             IRepository<Quotation> quotationRepository,
@@ -111,6 +118,7 @@ namespace tibs.stem.Quotationss
             IRepository<EnquiryStatus> enqStatusRepository,
             IRepository<StageDetails> StageDetailRepository,
             IUserEmailer userEmailer,
+            IHostingEnvironment hostingEnvironment,
             RoleManager roleManager, IRepository<UserRole, long> userRoleRepository,
             IRepository<EnquiryDetail> enquiryDetailRepository,
             IRepository<Teams> TeamRepository,
@@ -156,6 +164,7 @@ namespace tibs.stem.Quotationss
             _TeamEnquiryReportExcelExporter = TeamEnquiryReportExcelExporter;
             _TeamReportExcelExporter = TeamReportExcelExporter;
             _AllTeamReportExcelExporter = AllTeamReportExcelExporter;
+            _hostingEnvironment = hostingEnvironment;
         }
         public async Task<PagedResultDto<QuotationListDto>> GetQuotation(GetQuotationInput input)
         {
@@ -1140,6 +1149,7 @@ namespace tibs.stem.Quotationss
                 quotationProductTotals = quotationProductTotals + (from r in _quotationProductRepository.GetAll().Where(p => p.QuotationId == input.QuotationId && p.Approval == false) select r.OverAllPrice).Sum();
 
                 var quotation = _quotationRepository.GetAll().Where(q => q.Id == input.QuotationId).FirstOrDefault();
+                quotation.Optional = false;
                 quotation.Total = quotationProductTotals + (input.Approval == true ? input.TotalAmount : input.OverAllPrice);
                 if (quotation.Total > 0 && quotation.Vat > 0 && quotation.IsVat == true)
                 {
@@ -3037,56 +3047,52 @@ namespace tibs.stem.Quotationss
             return _AllTeamReportExcelExporter.ExportToFile(TeamListDtos, TotalReport);
 
         }
-        public void StandardPreviewExcel(NullableIdDto input)
+
+        public void StandardPreviewExcelNew(NullableIdDto input)
         {
-            var sectionGroup = (from r in _sectionRepository.GetAll() where r.QuotationId == input.Id select r).ToArray();
+            var sectionGroup = (from s in _sectionRepository.GetAll() where s.QuotationId == input.Id select s).ToArray();
             var query = _quotationProductRepository.GetAll().Where(p => p.QuotationId == input.Id);
 
-            var reg = (from r in query
+            var reg = (from z in query
                        select new QuotationProductListDto
                        {
-                           Id = r.Id,
-                           ProductCode = r.ProductId > 0 ? r.product.ProductCode : r.ProductCode,
-                           Quantity = r.Quantity,
-                           Discount = r.Discount,
-                           UnitOfMeasurement = r.UnitOfMeasurement,
-                           UnitOfPrice = r.UnitOfPrice,
-                           TotalAmount = r.Approval == true ? r.TotalAmount : r.OverAllPrice,
-                           //ProductId = r.ProductId,
-                           //ProductName = r.ProductId != null ? r.product.ProductName : "",
-                           //QuotationId = r.QuotationId,
-                           //RefNo = r.QuotationId > 0 ? r.quotation.RefNo : "",
-                           SectionId = r.SectionId,
-                           SectionName = r.SectionId != null ? r.section.Name : "",
-                           Locked = r.Locked,
-                           //Approval = r.Approval,
-                           //Discountable = r.Discountable,
-                           CreationTime = r.CreationTime,
-                           TemporaryProductId = r.TemporaryProductId,
-                           Description = r.ProductId > 0 ? r.product.Description : r.TemporaryProducts.Description
-
+                           Id = z.Id,
+                           ProductCode = z.ProductId > 0 ? z.product.ProductCode : z.ProductCode,
+                           Quantity = z.Quantity,
+                           Discount = z.Discount,
+                           UnitOfMeasurement = z.UnitOfMeasurement,
+                           UnitOfPrice = z.UnitOfPrice,
+                           TotalAmount = z.Approval == true ? z.TotalAmount : z.OverAllPrice,
+                           ProductId = z.ProductId,
+                           RefNo = z.QuotationId > 0 ? z.quotation.RefNo : "",
+                           SectionId = z.SectionId,
+                           SectionName = z.SectionId != null ? z.section.Name : "",
+                           Locked = z.Locked,
+                           CreationTime = z.CreationTime,
+                           TemporaryProductId = z.TemporaryProductId,
+                           Description = z.ProductId > 0 ? z.product.Description : z.TemporaryProducts.Description,
+                           ImageUrl = "Common/Images/img-not-available.png"
                        }).ToList();
 
-            //foreach (var data in reg)
-            //{
-            //    if (data.TemporaryProductId > 0)
-            //    {
-            //        var TempImage = _TempProductImageRepository.GetAll().Where(p => p.TemporaryProductId == data.TemporaryProductId).FirstOrDefault();
-            //        if (TempImage != null)
-            //        {
-            //            data.ImageUrl = TempImage.ImageUrl;
-            //        }
-            //    }
-            //    else if (data.ProductId > 0)
-            //    {
-            //        var Image = _ProductImageRepository.GetAll().Where(q => q.ProductId == data.ProductId).FirstOrDefault();
-            //        if (Image != null)
-            //        {
-            //            data.ImageUrl = Image.ImageUrl;
-            //        }
-            //    }
-
-            //}
+            foreach (var data in reg)
+            {
+                if (data.TemporaryProductId > 0)
+                {
+                    var TempImage = _TempProductImageRepository.GetAll().Where(p => p.TemporaryProductId == data.TemporaryProductId).FirstOrDefault();
+                    if (TempImage != null)
+                    {
+                        data.ImageUrl = TempImage.ImageUrl;
+                    }
+                }
+                else if (data.ProductId > 0)
+                {
+                    var Image = _ProductImageRepository.GetAll().Where(q => q.ProductId == data.ProductId).FirstOrDefault();
+                    if (Image != null)
+                    {
+                        data.ImageUrl = Image.ImageUrl;
+                    }
+                }
+            }
 
             var QuotationProductListDtos = reg.MapTo<List<QuotationProductListDto>>();
 
@@ -3094,17 +3100,16 @@ namespace tibs.stem.Quotationss
 
             foreach (var newsts in sectionGroup)
             {
-                var subtotal = (from r in reg where r.SectionId == newsts.Id select r.TotalAmount).Sum();
+                var subtotal = (from q in reg where q.SectionId == newsts.Id select q.TotalAmount).Sum();
                 SubListout.Add(new QuotationProductOutput
                 {
                     name = newsts.Name,
                     subtotal = subtotal,
-                    //subtotalFormat = subtotal.ToString("N", new CultureInfo("en-US")),
-                    GetQuotationProduct = (from r in reg where r.SectionId == newsts.Id select r).OrderBy(p => p.CreationTime).ToArray()
+                    GetQuotationProduct = (from t in reg where t.SectionId == newsts.Id select t).OrderBy(p => p.CreationTime).ToArray()
                 });
             }
 
-            string pathSource = @"E:\Excel\StandardQuote.xlsx";
+            string pathSource = _hostingEnvironment.WebRootPath + "\\Common\\File\\Excel\\PreviewExcelTemplate.xlsx";
 
             IWorkbook templateWorkbook;
             using (FileStream fs = new FileStream(pathSource, FileMode.Open, FileAccess.Read))
@@ -3112,12 +3117,64 @@ namespace tibs.stem.Quotationss
                 templateWorkbook = new XSSFWorkbook(fs);
             }
 
-            string sheetName = "StandardPreview3";
+            string sheetName = "Preview";
             ISheet sheet = templateWorkbook.GetSheet(sheetName);
+
+            var QuotationDetail = _quotationRepository.GetAll().Where(p => p.Id == input.Id);
+            var Quotations = (from a in QuotationDetail
+                              select new QuotationListDto
+                              {
+                                  Id = a.Id,
+                                  SCreationTime = a.CreationTime.ToString("dd-MMM-yyyy"),
+                                  NewCompanyId = a.NewCompanyId,
+                                  CompanyName = a.NewCompanys.Name,
+                                  AttentionContactId = a.AttentionContactId,
+                                  AttentionName = a.AttentionContactId != null ? (a.AttentionContact.TitleOfCourtesies.Name + "." + a.AttentionContact.Name + " " + a.AttentionContact.LastName) : "",
+                                  MobileNumber = a.MobileNumber ?? "",
+                                  InquiryId = a.InquiryId ?? 0,
+                                  InquiryName = a.Inquiry.LocationId != null ? a.Inquiry.Locations.LocationName : "Dubai, UAE",
+                                  Email = a.Email ?? "",
+                                  SalesPersonId = a.SalesPersonId,
+                                  SalesPersonName = a.SalesPerson.Name,
+                                  RFQNo = a.RFQNo ?? "",
+                                  RefNo = a.RefNo ?? "",
+                                  CustomerId = a.NewCompanys.CustomerId ?? "",
+                                  RefQNo = a.RefQNo ?? "",
+                                  Name = a.Name ?? "Quotation"
+                              }).FirstOrDefault();
+
+            ICell QuotationName = sheet.GetRow(5).GetCell(0);
+            QuotationName.SetCellValue(Quotations.Name);
+            ICell QuotationDate = sheet.GetRow(7).GetCell(1);
+            QuotationDate.SetCellValue(Quotations.SCreationTime);
+            ICell QuotationClient = sheet.GetRow(8).GetCell(1);
+            QuotationClient.SetCellValue(Quotations.CompanyName);
+            ICell QuotationAttn = sheet.GetRow(9).GetCell(1);
+            QuotationAttn.SetCellValue(Quotations.AttentionName);
+            ICell QuotationTel = sheet.GetRow(10).GetCell(1);
+            QuotationTel.SetCellValue(Quotations.MobileNumber);
+            ICell QuotationAdd = sheet.GetRow(11).GetCell(1);
+            QuotationAdd.SetCellValue(Quotations.InquiryName);
+            ICell QuotationEmail = sheet.GetRow(12).GetCell(1);
+            QuotationEmail.SetCellValue(Quotations.Email);
+
+            ICell QuotationSales = sheet.GetRow(7).GetCell(5);
+            QuotationSales.SetCellValue(Quotations.SalesPersonName);
+            ICell QuotationRFQ = sheet.GetRow(7).GetCell(7);
+            QuotationRFQ.SetCellValue(Quotations.RFQNo);
+
+            ICell QuotationNo = sheet.GetRow(9).GetCell(3);
+            QuotationNo.SetCellValue("Quotation No.\n" + Quotations.RefNo);
+            ICell QuotationCustomerId = sheet.GetRow(9).GetCell(5);
+            QuotationCustomerId.SetCellValue("Customer ID\n" + Quotations.CustomerId);
+            ICell QuotationRefNo = sheet.GetRow(9).GetCell(7);
+            QuotationRefNo.SetCellValue("Ref No\n" + Quotations.RefQNo);
+
+            string TotalAmountFormula = "H7";
+            int r = 49;
 
             if (SubListout.Count > 0)
             {
-                int r = 18;
                 for (int sectionIndex = 0; sectionIndex < SubListout.Count; sectionIndex++)
                 {
                     IRow SectionRow = sheet.GetRow(15).CopyRowTo(r);
@@ -3130,20 +3187,36 @@ namespace tibs.stem.Quotationss
                         for (int p = 0; p < SubListout[sectionIndex].GetQuotationProduct.Length; p++)
                         {
                             IRow ProductRow = sheet.GetRow(16).CopyRowTo(p + (r + 1));
+                            ProductRow.Height = sheet.GetRow(16).Height;
                             ICell ProductNo = ProductRow.GetCell(0);
                             ICell ProductDesp = ProductRow.GetCell(1);
-                            //ICell ProductImg = ProductRow.GetCell(2);
                             ICell ProductQty = ProductRow.GetCell(3);
-                            //ICell ProductUM = ProductRow.GetCell(4);
                             ICell ProductUP = ProductRow.GetCell(5);
-                            //ICell ProductPD = ProductRow.GetCell(6);
                             ICell ProductAmount = ProductRow.GetCell(7);
 
+                            var rootpath = new ConfigurationBuilder()
+                                                .SetBasePath(Directory.GetCurrentDirectory())
+                                                .AddJsonFile("appsettings.json");
+                            Configuration = rootpath.Build();
+                            var root = Configuration["App:ServerRootAddress"];
+                            WebClient wc = new WebClient();
+                            byte[] data = wc.DownloadData(root + "/" + SubListout[sectionIndex].GetQuotationProduct[p].ImageUrl);
+                            int picInd = templateWorkbook.AddPicture(data, PictureType.PNG);
+                            XSSFCreationHelper helper = templateWorkbook.GetCreationHelper() as XSSFCreationHelper;
+                            XSSFDrawing drawing = sheet.CreateDrawingPatriarch() as XSSFDrawing;
+                            XSSFClientAnchor anchor = helper.CreateClientAnchor() as XSSFClientAnchor;
+                            anchor.Col1 = 2;
+                            anchor.Row1 = p + (r - 33);
+                            anchor.Dx1 = 400000;
+                            anchor.Dy1 = 400000;
+                            XSSFPicture ProductImg = drawing.CreatePicture(anchor, picInd) as XSSFPicture;
+                            ProductImg.Resize(0.5, 0.5);
                             ProductNo.SetCellValue(p + 1);
-                            ProductDesp.SetCellValue(SubListout[sectionIndex].GetQuotationProduct[p].Description);
+                            string DecodedText = HttpUtility.HtmlDecode(SubListout[sectionIndex].GetQuotationProduct[p].Description);
+                            string ProdDescription = Regex.Replace(Regex.Replace(DecodedText, "</p>", "\n"), "<.*?>", String.Empty);
+                            ProductDesp.SetCellValue(ProdDescription);
                             ProductQty.SetCellValue((double)SubListout[sectionIndex].GetQuotationProduct[p].Quantity);
                             ProductUP.SetCellValue((double)SubListout[sectionIndex].GetQuotationProduct[p].UnitOfPrice);
-
                             ProductAmount.SetCellFormula("IF(OR(ISBLANK(G" + (p + r + 2) + ")),(D" + (p + r + 2) + "*F" + (p + r + 2) + "),(D" + (p + r + 2) + "*G" + (p + r + 2) + "))");
                         }
                     }
@@ -3151,24 +3224,56 @@ namespace tibs.stem.Quotationss
                     IRow SubTotalRow = sheet.GetRow(17).CopyRowTo(r + 1 + SubListout[sectionIndex].GetQuotationProduct.Length);
                     ICell SubTotalCell = SubTotalRow.GetCell(7);
                     SubTotalCell.SetCellFormula("SUM(H" + (r + 2) + ":H" + (r + 1 + SubListout[sectionIndex].GetQuotationProduct.Length) + ")");
-
+                    TotalAmountFormula = TotalAmountFormula + ",H" + (r + 2 + SubListout[sectionIndex].GetQuotationProduct.Length);
                     r = (r + 2 + SubListout[sectionIndex].GetQuotationProduct.Length);
                 }
             }
 
-            for (int i = 0; i < 3; i++)
+            int startRow = 18;
+            for (int n = 0; n < 30; n++)
+            {
+                IRow SummaryRow = sheet.GetRow(startRow).CopyRowTo(n + r);
+                if (startRow == 21)
+                {
+                    ICell TotalAmount = SummaryRow.GetCell(7);
+                    TotalAmount.SetCellFormula("SUM(" + TotalAmountFormula + ")");
+                }
+                if (startRow == 22)
+                {
+                    ICell TotalAmountWords = SummaryRow.GetCell(2);
+                    decimal NetAmount = (from TNT in reg select (TNT.Quantity * TNT.UnitOfPrice)).Sum();
+                    NumberToWordsConverter converter = new NumberToWordsConverter();
+                    long daet = decimal.ToInt64(NetAmount);
+                    string TotalString = converter.Convert(daet);
+                    var decPlaces = (int)(((decimal)NetAmount % 1) * 100);
+                    string fils = decPlaces > 0 ? decPlaces.ToString() : "0";
+
+                    TotalAmountWords.SetCellValue("Dirhams " + TotalString + " and Fils " + fils + "/100 only");
+                }
+                startRow++;
+            }
+            for (int i = 0; i < 34; i++)
             {
                 IRow DeleteRow = sheet.GetRow(15);
                 sheet.RemoveRow(DeleteRow);
                 sheet.ShiftRows(16, sheet.LastRowNum, -1);
             }
-
-            using (FileStream fs = new FileStream(pathSource, FileMode.Create, FileAccess.Write))
+            templateWorkbook.SetSheetName(0, "StandardPreview_" + input.Id + "");
+            string newPathSource = _hostingEnvironment.WebRootPath + "\\Common\\Excel\\";
+            if (!Directory.Exists(newPathSource))
+            {
+                Directory.CreateDirectory(newPathSource);
+            }
+            string fileName = "StandardPreviewExcel_" + input.Id + ".xlsx";
+            if (System.IO.File.Exists(newPathSource + fileName))
+            {
+                System.IO.File.Delete(newPathSource + fileName);
+            }
+            using (FileStream fs = new FileStream(newPathSource + fileName, FileMode.Create, FileAccess.Write))
             {
                 templateWorkbook.Write(fs);
             }
         }
-
     }
 
     public class DiscountEmailFirst
@@ -3192,5 +3297,142 @@ namespace tibs.stem.Quotationss
     {
         public int Id { get; set; }
         public virtual DateTime NextActivity { get; set; }
+    }
+    public class NumberToWordsConverter
+    {
+        public static readonly string[] UnitsMap = { "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen" };
+        public static readonly string[] TensMap = { "Zero", "Ten", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety" };
+
+        public static readonly Dictionary<long, string> OrdinalExceptions = new Dictionary<long, string>
+        {
+            {1, "First"},
+            {2, "Second"},
+            {3, "Third"},
+            {4, "Fourth"},
+            {5, "Fifth"},
+            {8, "eighth"},
+            {9, "Ninth"},
+            {12, "Twelfth"},
+        };
+
+        public string Convert(long number)
+        {
+            return Convert(number, false);
+        }
+
+        public string ConvertToOrdinal(int number)
+        {
+            return Convert(number, true);
+        }
+
+        public string Convert(long number, bool isOrdinal)
+        {
+            if (number == 0)
+                return GetUnitValue(0, isOrdinal);
+
+            if (number < 0)
+                return string.Format("minus {0}", Convert(-number));
+
+            var parts = new List<string>();
+
+            if ((number / 1000000000000000000) > 0)
+            {
+                parts.Add(string.Format("{0} Quintillion", Convert(number / 1000000000000000000)));
+                number %= 1000000000000000000;
+            }
+
+            if ((number / 1000000000000000) > 0)
+            {
+                parts.Add(string.Format("{0} Quadrillion", Convert(number / 1000000000000000)));
+                number %= 1000000000000000;
+            }
+
+            if ((number / 1000000000000) > 0)
+            {
+                parts.Add(string.Format("{0} Trillion", Convert(number / 1000000000000)));
+                number %= 1000000000000;
+            }
+
+            if ((number / 1000000000) > 0)
+            {
+                parts.Add(string.Format("{0} Billion", Convert(number / 1000000000)));
+                number %= 1000000000;
+            }
+
+            if ((number / 1000000) > 0)
+            {
+                parts.Add(string.Format("{0} Million", Convert(number / 1000000)));
+                number %= 1000000;
+            }
+
+            if ((number / 1000) > 0)
+            {
+                parts.Add(string.Format("{0} Thousand", Convert(number / 1000)));
+                number %= 1000;
+            }
+
+            if ((number / 100) > 0)
+            {
+                parts.Add(string.Format("{0} Hundred", Convert(number / 100)));
+                number %= 100;
+                // parts.Add(" and ");
+            }
+
+            if (number > 0)
+            {
+                if (parts.Count != 0)
+                    parts.Add(" ");
+
+                if (number < 20)
+                    parts.Add(GetUnitValue(number, isOrdinal));
+                else
+                {
+                    var lastPart = TensMap[number / 10];
+                    if ((number % 10) > 0)
+                        lastPart = lastPart + " " + string.Format("{0}", GetUnitValue(number % 10, isOrdinal));
+                    else if (isOrdinal)
+                        lastPart = lastPart.TrimEnd('y') + "ieth";
+
+                    parts.Add(lastPart);
+                }
+            }
+            else if (isOrdinal)
+                parts[parts.Count - 1] += "th";
+
+            var toWords = string.Join(" ", parts.ToArray());
+
+            if (isOrdinal)
+                toWords = RemoveOnePrefix(toWords);
+
+            return toWords;
+        }
+
+        public static string GetUnitValue(long number, bool isOrdinal)
+        {
+            if (isOrdinal)
+            {
+                string exceptionString;
+                if (ExceptionNumbersToWords(number, out exceptionString))
+                    return exceptionString;
+                else
+                    return UnitsMap[number] + "th";
+            }
+            else
+                return UnitsMap[number];
+        }
+
+        public static string RemoveOnePrefix(string toWords)
+        {
+            // one hundred => hundredth
+            if (toWords.IndexOf("one", StringComparison.Ordinal) == 0)
+                toWords = toWords.Remove(0, 4);
+
+            return toWords;
+        }
+
+        public static bool ExceptionNumbersToWords(long number, out string words)
+        {
+            return OrdinalExceptions.TryGetValue(number, out words);
+        }
     }
 }

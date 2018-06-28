@@ -56,6 +56,10 @@
 
         public const string Pages_Tenant_Dashboard = "Pages.Tenant.Dashboard";
 
+        public const string Pages_Tenant_Dashboard_Sales = "Pages.Tenant.Dashboard.Sales";
+
+        public const string Pages_Tenant_Dashboard_Marketing = "Pages.Tenant.Dashboard.Marketing";
+
         public const string Pages_Administration_Tenant_Settings = "Pages.Administration.Tenant.Settings";
 
         public const string Pages_Administration_Tenant_SubscriptionManagement = "Pages.Administration.Tenant.SubscriptionManagement";

@@ -20,6 +20,6 @@ namespace tibs.stem.EnquiryUpdates
         int CheckEnquiryStages(EnquiryStatusUpdateInput input);
         void CreateActivityDefault(EnquiryUpdateInputDto input);
         void UpdateEnquiryClosureDate(ClosureUpdateDateInput input);
-        Task ReverseClosed(NullableIdDto input);
+        void ReverseClosed(NullableIdDto input);
     }
 }
