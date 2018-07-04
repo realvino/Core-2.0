@@ -140,7 +140,7 @@ namespace tibs.stem.Finishedd
         }
         public async Task<List<FinishedDetailList>> GetFinishedDetail(NullableIdDto input)
         {
-            var query = _FinishedDetailRepository.GetAll().Where(p => p.FinishedId == input.Id);
+            var query = _FinishedDetailRepository.GetAll().Where(p => p.ProductId == input.Id);
             var reg = (from a in query
                        select new FinishedDetailList
                        {

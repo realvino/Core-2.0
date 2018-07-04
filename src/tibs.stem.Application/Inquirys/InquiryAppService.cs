@@ -367,7 +367,7 @@ namespace tibs.stem.Inquirys
             {
                 query = (from enq in _inquiryRepository.GetAll()
                          join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
-                         where enq.MileStoneId > 3 && enq.Junk == null && leadDetail.DesignerId == userid && enq.IsClosed != true
+                         where enq.MileStoneId > 3 && enq.Junk == null && leadDetail.DesignerId == userid && enq.IsClosed != true && enq.DesignerApproval == true
                          select enq
                         );
             }
@@ -378,6 +378,17 @@ namespace tibs.stem.Inquirys
                          where enq.MileStoneId > 3 && enq.Junk == null && leadDetail.CoordinatorId == userid && enq.IsClosed != true
                          select enq
                         );
+            }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                query = (from enq in _inquiryRepository.GetAll()
+                         join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
+                         join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
+                         where enq.MileStoneId > 3 && enq.Junk == null && enq.MileStones.IsQuotation == false && enqDetail.AssignedbyId == userid && enq.IsClosed != true
+                         select enq).Union(from enq in _inquiryRepository.GetAll()
+                                           join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                                           where enq.MileStoneId > 3 && enq.Junk == null && leadDetail.CoordinatorId == userid && enq.IsClosed != true
+                                           select enq).Distinct().OrderBy(p => p.Id);
             }
             else
             {
@@ -762,7 +773,12 @@ namespace tibs.stem.Inquirys
                                CLandlineNumber = a.CLandlineNumber,
                                CMbNo = a.CMbNo,
                                LeadStatusId = a.LeadStatusId ?? 0,
-                               LeadStatusName = a.LeadStatuss.LeadStatusName ?? ""
+                               LeadStatusName = a.LeadStatuss.LeadStatusName ?? "",
+                               Stared = a.Stared,
+                               DesignerApproval = a.DesignerApproval,
+                               RevisionApproval = a.RevisionApproval,
+                               Weightedvalue = a.Weightedvalue
+                               
                            }).FirstOrDefault();
 
             if (inquiry != null)
@@ -1293,6 +1309,21 @@ namespace tibs.stem.Inquirys
         public virtual async Task CreateSalesInquiry(InquiryInputDto input)
         {
             var date = DateTime.Now.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
+            long userid = (int)AbpSession.UserId;
+
+            var userrole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
+
+            
+            if (input.DesignerApproval = true && (userrole.DisplayName == "Sales Manager / Sales Executive" || userrole.DisplayName == "Sales Manager")) {
+                input.DesignerApproval = true;
+            }
+            else {
+                input.DesignerApproval = false;
+            }
             var checkDupicate = _inquiryRepository.GetAll().Where(p => p.Name == input.Name).FirstOrDefault();
             if (checkDupicate == null)
             {
@@ -1381,6 +1412,25 @@ namespace tibs.stem.Inquirys
 
             var data = 0;
             var date = DateTime.Now.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
+
+            long userid = (int)AbpSession.UserId;
+
+            var userrole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
+
+
+            if (input.DesignerApproval = true && (userrole.DisplayName == "Sales Manager / Sales Executive" || userrole.DisplayName == "Sales Manager"))
+            {
+                input.DesignerApproval = true;
+            }
+            else
+            {
+                input.DesignerApproval = false;
+            }
+
             var checkDupicate = _inquiryRepository.GetAll().Where(p => p.Name == input.Name).FirstOrDefault();
             if (checkDupicate == null)
             {
@@ -1654,8 +1704,8 @@ namespace tibs.stem.Inquirys
                 var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.InquiryId).FirstOrDefault();
                 var query = await _LeadDetailRepository.GetAsync(input.Id);
 
-
                 var designer = (from r in _LeadDetailRepository.GetAll().Where(p => p.InquiryId == input.InquiryId && p.Id == input.Id) select r).FirstOrDefault();
+
                 if (designer.DesignerId == null && input.DesignerId != null)
                 {
                     JobActivity actinput = new JobActivity()
@@ -1683,6 +1733,64 @@ namespace tibs.stem.Inquirys
 
                 ObjectMapper.Map(input, query);
                 await _LeadDetailRepository.UpdateAsync(query);
+            }
+        }
+        public virtual async Task InquiryDesignerApproval(EntityDto input)
+        {
+            long userid = (int)AbpSession.UserId;
+
+            var userrole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
+
+
+            if (userrole.DisplayName == "Sales Manager / Sales Executive" || userrole.DisplayName == "Sales Manager" || userrole.DisplayName == "Chief Operations Manager")
+            {
+                var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.Id).FirstOrDefault();
+                inq.DesignerApproval = true;
+                await _inquiryRepository.UpdateAsync(inq);
+            }
+           
+        }
+        public virtual async Task InquiryDesignerReject(EntityDto input)
+        {
+            long userid = (int)AbpSession.UserId;
+
+            var userrole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
+
+
+            if (userrole.DisplayName == "Sales Manager / Sales Executive" || userrole.DisplayName == "Sales Manager" || userrole.DisplayName == "Chief Operations Manager")
+            {
+                var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.Id).FirstOrDefault();
+                inq.LeadStatusId = 4;
+                inq.IsClosed = true;
+                await _inquiryRepository.UpdateAsync(inq);
+            }
+
+        }
+
+        public virtual async Task InquiryRevisionApproval(EntityDto input)
+        {
+            long userid = (int)AbpSession.UserId;
+
+            var userrole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
+
+
+            if (userrole.DisplayName == "Sales Manager / Sales Executive" || userrole.DisplayName == "Sales Manager" || userrole.DisplayName == "Chief Operations Manager")
+            {
+                var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.Id).FirstOrDefault();
+                inq.RevisionApproval = true;
+                await _inquiryRepository.UpdateAsync(inq);
             }
         }
         public async Task<Array> GetInquiryTickets(GetTicketInput input)
@@ -1852,7 +1960,7 @@ namespace tibs.stem.Inquirys
             }
             else if (userrole.DisplayName == "Designer")
             {
-                viewquery = "SELECT * FROM [dbo].[View_Inquiry] where DesignerId=" + userid.ToString();
+                viewquery = "SELECT * FROM [dbo].[View_Inquiry] where DesignerApproval = 1 and DesignerId=" + userid.ToString();
             }
             else if (userrole.DisplayName == "Sales Coordinator")
             {
@@ -1861,6 +1969,10 @@ namespace tibs.stem.Inquirys
             else if (userrole.DisplayName == "Sales Manager / Sales Executive")
             {
                     viewquery = "SELECT * FROM [dbo].[View_Inquiry]  where SalesManagerId=" + userid.ToString();
+            }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                viewquery = "SELECT * FROM [dbo].[View_Inquiry]  where AssignedbyId=" + userid.ToString() + " or CoordinatorId =" + userid.ToString();
             }
             else
             {
@@ -1956,7 +2068,8 @@ namespace tibs.stem.Inquirys
                                     Browcerinfo = Convert.ToString(dr["DateString"]),
                                     ContactId = Convert.ToInt32(dr["ContactId"]),
                                     Strike = Convert.ToBoolean(dr["Strike"]),
-                                    Revision = Convert.ToString(dr["Revision"])
+                                    Revision = Convert.ToString(dr["Revision"]),
+                                    Stared = Convert.ToBoolean(dr["Stared"])
                                 });
 
             var NewStatuss = NormalTicket;
@@ -2064,6 +2177,16 @@ namespace tibs.stem.Inquirys
                          select q
                         );
             }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                query = (from q in _quotationRepository.GetAll()
+                         where q.Revised == false && q.SalesPersonId == userid && q.MileStoneId > 3 && q.IsClosed != true && q.Archieved != true && q.Void != true
+                         select q).Union(from q in _quotationRepository.GetAll()
+                                         join enq in _inquiryRepository.GetAll() on q.InquiryId equals enq.Id
+                                         join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                                         where q.Revised == false && leadDetail.CoordinatorId == userid && q.MileStoneId > 3 && q.IsClosed != true && q.Archieved != true && q.Void != true
+                                         select q).Distinct().OrderBy(p => p.Id);
+            }
             else
             {
                 query = _quotationRepository.GetAll().Where(p => p.MileStoneId > 3  && p.Revised == false && p.IsClosed != true && p.Archieved != true && p.Void != true);
@@ -2167,7 +2290,32 @@ namespace tibs.stem.Inquirys
                 }
             }
 
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                if (input.SalesmanId > 0)
+                {
+                    actvity = (from act in _acitivityTrackRepository.GetAll()
+                               join enqDetail in _enquiryDetailRepository.GetAll() on act.EnquiryId equals enqDetail.InquiryId
+                               join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
+                               where enqDetail.AssignedbyId == userid
+                               select act
+                            );
 
+                }
+                else
+                {
+                    actvity = (from act in _acitivityTrackRepository.GetAll()
+                               join enqDetail in _enquiryDetailRepository.GetAll() on act.EnquiryId equals enqDetail.InquiryId
+                               join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
+                               where enqDetail.AssignedbyId == userid
+                               select act).Union(from act in _acitivityTrackRepository.GetAll()
+                                                 join leadDetail in _LeadDetailRepository.GetAll() on act.EnquiryId equals leadDetail.InquiryId
+                                                 join usr in UserManager.Users on leadDetail.CoordinatorId equals usr.Id
+                                                 where leadDetail.CoordinatorId == userid
+                                                 select act).Distinct().OrderBy(p => p.Id);
+                }
+
+            }
             else
             {
                 if (input.SalesmanId > 0)
@@ -2721,6 +2869,19 @@ namespace tibs.stem.Inquirys
                          select enq
                         );
             }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                query = (from enq in _inquiryRepository.GetAll()
+                         join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
+                         join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
+                         where enq.MileStoneId > 3 && enq.Junk == null && enq.MileStones.IsQuotation == false && enqDetail.AssignedbyId == userid && enq.IsClosed != true
+                         select enq).Union(from enq in _inquiryRepository.GetAll()
+                                           join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                                           where enq.MileStoneId > 3 && enq.Junk == null && leadDetail.CoordinatorId == userid && enq.IsClosed != true
+                                           select enq
+                         ).Distinct().OrderBy(p => p.Id);
+
+            }
             else
             {
                 query = _inquiryRepository.GetAll().Where(p => p.MileStoneId > 3 && p.MileStones.IsQuotation == false && p.Junk == null && p.IsClosed != true);
@@ -3008,27 +3169,31 @@ namespace tibs.stem.Inquirys
         }
         public ListResultDto<JobActivityList> GetJobActivity(NullableIdDto input)
         {
-            var query = _jobActivityRepository.GetAll().Where(p => p.InquiryId == input.Id);
- 
-            var JobActivity = (from a in query
-                               select new JobActivityList
-                               {
-                                   Id = a.Id,
-                                   Title = a.Title,
-                                   Remark = a.Remark,
-                                   DesignerId = a.DesignerId,
-                                   DesignerName = a.Designer.Name,
-                                   InquiryId = a.InquiryId,
-                                   InquiryName = a.Inquiry.Name,
-                                   Isopen = a.Isopen,
-                                   AllottedDate = a.AllottedDate,
-                                   EndDate = a.EndDate,
-                                   StartDate = a.StartDate,
-                                   JobNumber = a.JobNumber
-                               });
- 
-            var JobActivitylistoutput = JobActivity.MapTo<List<JobActivityList>>();
-            return new ListResultDto<JobActivityList>(JobActivitylistoutput);
+            var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.Id).FirstOrDefault();
+            var query = _jobActivityRepository.GetAll().Where(p => p.InquiryId == 0);
+            if (inq.DesignerApproval == true)
+            {
+               query = _jobActivityRepository.GetAll().Where(p => p.InquiryId == input.Id);
+            }
+                var JobActivity = (from a in query
+                                   select new JobActivityList
+                                   {
+                                       Id = a.Id,
+                                       Title = a.Title,
+                                       Remark = a.Remark,
+                                       DesignerId = a.DesignerId,
+                                       DesignerName = a.Designer.Name,
+                                       InquiryId = a.InquiryId,
+                                       InquiryName = a.Inquiry.Name,
+                                       Isopen = a.Isopen,
+                                       AllottedDate = a.AllottedDate,
+                                       EndDate = a.EndDate,
+                                       StartDate = a.StartDate,
+                                       JobNumber = a.JobNumber
+                                   });
+
+                var JobActivitylistoutput = JobActivity.MapTo<List<JobActivityList>>();
+                return new ListResultDto<JobActivityList>(JobActivitylistoutput);
         }
         public async Task<GetJobActivity> GetJobActivityForEdit(NullableIdDto input)
         {
@@ -3445,9 +3610,34 @@ namespace tibs.stem.Inquirys
                         );
                 }
             }
-            else
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
             {
                 if (input.DesignerId > 0)
+                {
+                    query = (from job in _jobActivityRepository.GetAll()
+                             join enqDetail in _enquiryDetailRepository.GetAll() on job.InquiryId equals enqDetail.InquiryId
+                             join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
+                             where enqDetail.AssignedbyId == userid && job.DesignerId == input.DesignerId
+                             select job).Union(from job in _jobActivityRepository.GetAll()
+                                               join leadDetail in _LeadDetailRepository.GetAll() on job.InquiryId equals leadDetail.InquiryId
+                                               where leadDetail.CoordinatorId == userid && job.DesignerId == input.DesignerId
+                                               select job).Distinct().OrderBy(p => p.Id);
+                }
+                else
+                {
+                    query = (from job in _jobActivityRepository.GetAll()
+                             join enqDetail in _enquiryDetailRepository.GetAll() on job.InquiryId equals enqDetail.InquiryId
+                             join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
+                             where enqDetail.AssignedbyId == userid
+                             select job).Union(from job in _jobActivityRepository.GetAll()
+                                               join leadDetail in _LeadDetailRepository.GetAll() on job.InquiryId equals leadDetail.InquiryId
+                                               where leadDetail.CoordinatorId == userid
+                                               select job).Distinct().OrderBy(p => p.Id);
+                }
+            }
+            else
+            {
+               if (input.DesignerId > 0)
                 {
                     query = _jobActivityRepository.GetAll().Where(p => p.DesignerId == input.DesignerId);
                 }
@@ -3570,6 +3760,17 @@ namespace tibs.stem.Inquirys
                          where enq.IsClosed == true && leadDetail.CoordinatorId == userid
                          select enq
                         );
+            }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                query = (from enq in _inquiryRepository.GetAll()
+                         join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
+                         join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
+                         where enq.IsClosed == true && enqDetail.AssignedbyId == userid
+                         select enq).Union(from enq in _inquiryRepository.GetAll()
+                                           join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                                           where enq.IsClosed == true && leadDetail.CoordinatorId == userid
+                                           select enq).Distinct().OrderBy(p => p.Id);
             }
             else
             {
@@ -3701,6 +3902,17 @@ namespace tibs.stem.Inquirys
                          select enq
                         );
             }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                query = (from enq in _inquiryRepository.GetAll()
+                         join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
+                         join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
+                         where enq.MileStoneId > 3 && enq.Junk == true && enqDetail.AssignedbyId == userid
+                         select enq).Union(from enq in _inquiryRepository.GetAll()
+                                           join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                                           where enq.MileStoneId > 3 && enq.Junk == true && leadDetail.CoordinatorId == userid
+                                           select enq).Distinct().OrderBy(p => p.Id);
+            }
             else if (userrole.DisplayName == "Admin")
             {
                 query = _inquiryRepository.GetAll().Where(p => p.Junk == true);
@@ -3823,6 +4035,18 @@ namespace tibs.stem.Inquirys
                          select enq
                         );
             }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                query = (from enq in _inquiryRepository.GetAll()
+                         join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
+                         join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
+                         where enq.IsClosed == true && enqDetail.AssignedbyId == userid
+                         select enq).Union(from enq in _inquiryRepository.GetAll()
+                                           join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                                           where enq.IsClosed == true && leadDetail.CoordinatorId == userid
+                                           select enq).Distinct().OrderBy(p => p.Id);
+
+            }
             else
             {
                 query = _inquiryRepository.GetAll().Where(p => p.IsClosed == true);
@@ -3901,6 +4125,16 @@ namespace tibs.stem.Inquirys
                          where q.Revised == false && leadDetail.DesignerId == userid && q.MileStoneId > 3 && q.MileStones.IsQuotation == true && q.IsClosed != true && q.Archieved != true && q.Void != true
                          select q
                         );
+            }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                query = (from q in _quotationRepository.GetAll()
+                         where q.Revised == false && q.SalesPersonId == userid && q.MileStoneId > 3 && q.MileStones.IsQuotation == true && q.IsClosed != true && q.Archieved != true && q.Void != true
+                         select q).Union(from q in _quotationRepository.GetAll()
+                                         join enq in _inquiryRepository.GetAll() on q.InquiryId equals enq.Id
+                                         join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                                         where q.Revised == false && leadDetail.CoordinatorId == userid && q.MileStoneId > 3 && q.MileStones.IsQuotation == true && q.IsClosed != true && q.Archieved != true && q.Void != true
+                                         select q).Distinct().OrderBy(p => p.Id);
             }
             else if (userrole.DisplayName == "Sales Coordinator")
             {
@@ -4505,6 +4739,10 @@ namespace tibs.stem.Inquirys
             {
                 viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where CoordinatorId = " + userid;
             }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where AssignedbyId = " + userid + "or CoordinatorId = " + userid;
+            }
 
             ConnectionAppService db = new ConnectionAppService();
             DataTable dr = new DataTable();
@@ -4605,6 +4843,43 @@ namespace tibs.stem.Inquirys
             return SubListout.ToArray();
 
         }
+        public ListResultDto<NotificationListDto> GetSalesManagerNotifications()
+        {
+            long userid = (int)AbpSession.UserId;
+            var userrole = (from a in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on a.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
+
+
+            var query = (from enq in _inquiryRepository.GetAll()
+                         join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
+                         where enq.Id == 0
+                         select enqDetail);
+
+            if (userrole.DisplayName == "Sales Manager" || userrole.DisplayName == "Sales Manager / Sales Executive" || userrole.DisplayName == "Chief Operations Manager")
+            {
+                query = (from enq in _inquiryRepository.GetAll()
+                         join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
+                         join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                         join team in _TeamRepository.GetAll() on enqDetail.TeamId equals team.Id
+                         join usr in UserManager.Users on team.SalesManagerId equals usr.Id
+                         where enq.Junk != true && enq.Archieved != true && enq.IsClosed != true && team.SalesManagerId == userid && enq.MileStoneId > 3 && enq.DesignerApproval == false && leadDetail.DesignerId > 0
+                         select enqDetail
+                        );
+            }
+            var NewStatuss = (from a in query
+                              select new NotificationListDto
+                              {
+                                  Id = a.Inquirys.Id,
+                                  Name = a.Inquirys.Name,
+                                  SubmissionId = a.Inquirys.SubMmissionId,
+                                  DesignerApproval = a.Inquirys.DesignerApproval,
+                                  RevisionApproval = a.Inquirys.RevisionApproval
+                              }).ToList();
+            return new ListResultDto<NotificationListDto>(NewStatuss.MapTo<List<NotificationListDto>>());
+        }
 
     }
     public class monthdto
@@ -4618,5 +4893,13 @@ namespace tibs.stem.Inquirys
     {
         public int CompanyId { get; set; }
         public int SalesmanId { get; set; }
+    }
+    public class NotificationListDto
+    {
+        public virtual int Id { get; set; }
+        public virtual string SubmissionId { get; set; }
+        public virtual string Name { get; set; }
+        public virtual bool DesignerApproval { get; set; }
+        public virtual bool RevisionApproval { get; set; }
     }
 }

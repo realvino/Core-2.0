@@ -87,5 +87,9 @@ namespace tibs.stem.Inquirys
         public virtual bool DisableQuotation { get; set; }
         public virtual bool Lost { get; set; }
 
+        public virtual bool DesignerApproval { get; set; }
+        public virtual bool RevisionApproval { get; set; }
+        public virtual bool Stared { get; set; }
+        public virtual decimal Weightedvalue { get; set; }
     }
 }

@@ -230,6 +230,58 @@ namespace tibs.stem.Tenants.Dashboard
                 return data.ToArray();
             }
         }
+        public async Task<GetConvertionratio> GetConversionRatioGraph(GraphInput input)
+        {
+            List<ConversionRatio> cl = new List<ConversionRatio>();
+            GetConvertionratio cc = new GetConvertionratio();
+            ConnectionAppService db = new ConnectionAppService();
+            DataTable viewtable = new DataTable();
+            using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+            {
+                SqlCommand sqlComm = new SqlCommand("spGraph_ConversionRatioGraph", con);
+                sqlComm.Parameters.AddWithValue("@UserId", input.UserId);
+                sqlComm.Parameters.AddWithValue("@TeamId", input.TeamId);
+                sqlComm.Parameters.AddWithValue("@StartDate", input.StartDate);
+                sqlComm.Parameters.AddWithValue("@EndDate", input.EndDate);
+                sqlComm.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                {
+                    da.Fill(viewtable);
+                }
+                con.Close();
+                var data = (from DataRow dr in viewtable.Rows
+                            select new GetConversionRatioListDto
+                            {
+                                Id = Convert.ToInt32(dr["Id"]),
+                                Name = Convert.ToString(dr["Name"]),
+                                STotal = Convert.ToDecimal(dr["SubmittedTotal"]),
+                                WTotal = Convert.ToDecimal(dr["WonTotal"])
+
+                            });
+
+                var datas = data.ToArray();
+
+                int k = 0;
+                decimal[] Submitted = new decimal[datas.Select(p => p.Name).ToList().Count()];
+                decimal[] Won = new decimal[datas.Select(p => p.Name).ToList().Count()];
+                string[] Catageries = new string[datas.Select(p => p.Name).ToList().Count()];
+
+                foreach (var st in datas)
+                {
+                    Submitted[k] = st.STotal;
+                    Won[k] = st.WTotal;
+                    Catageries[k] = st.Name;
+                    k++;
+                }
+
+                cl.Add(new ConversionRatio { Data = Submitted, Name = "Submitted" });
+                cl.Add(new ConversionRatio { Data = Won, Name = "Won" });
+                cc.Catagries = Catageries;
+                cc.ConversionRatio = cl.ToArray();
+                return cc;
+            }
+        }
         public async Task<RecentInquiryClosureList> GetInquiryRecentClosure(RecentInquiryInput input)
         {
             ConnectionAppService db = new ConnectionAppService();

@@ -43,7 +43,7 @@ namespace tibs.stem.Quotationss
         Task<FileDto> GetTeamEnquiryReportExcel(NullableIdDto input);
         Task<FileDto> GetTeamReportExcel(NullableIdDto input);
         Task<FileDto> GetAllTeamReportExcel();
-
+        Task QuotationRevaluation(QuotationRevaluationInput input);
     }
 
 }

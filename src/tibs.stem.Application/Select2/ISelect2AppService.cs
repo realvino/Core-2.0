@@ -78,5 +78,6 @@ namespace tibs.stem.Select2
         List<SliderDataList> GetSalesExecutive(NullableIdDto input);
         Task<SelectDResult> GetDashboardTeam();
         Task<Select3Result> GetDesigners();
+        Task<Select2Result> GetFinishes();
     }
 }

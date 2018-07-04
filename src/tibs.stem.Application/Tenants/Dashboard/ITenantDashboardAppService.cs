@@ -32,5 +32,6 @@ namespace tibs.stem.Tenants.Dashboard
         List<SliderDataList> GetSalesExecutive(String datainput, bool IsSales);
         Task<SelectDResult> GetDashboardTeam();
         Task<GetSalesLeadList> GetSalesLeadSummary();
+        Task<GetConvertionratio> GetConversionRatioGraph(GraphInput input);
     }
 }

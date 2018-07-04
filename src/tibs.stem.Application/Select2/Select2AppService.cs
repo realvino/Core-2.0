@@ -62,6 +62,7 @@ using tibs.stem.Views;
 using tibs.stem.Storage;
 using tibs.stem.Authorization.Users.Profile.Dto;
 using tibs.stem.Url;
+using tibs.stem.Finish;
 
 namespace tibs.stem.Select2
 {
@@ -123,11 +124,12 @@ namespace tibs.stem.Select2
         private readonly IRepository<DateFilter> _DateFilterRepository;
         private readonly IBinaryObjectManager _binaryObjectManager;
         private readonly IWebUrlService _webUrlService;
+        private readonly IRepository<Finished> _FinishedRepository;
 
         public Select2AppService(IRepository<Department> departmentRepository, IRepository<Collection> CollectionRepository, IRepository<TitleOfCourtesy> TitleRepository, IRepository<NewContact> newContactRepositary, IRepository<NewCompany> newCompanyRepositary, IRepository<City> cityRepository, IRepository<MileStone> milestoneRepositary,
            IRepository<LineType> lineTypeRepositary, IRepository<ReportColumn> ReportColumnRepository, IRepository<DateFilter> DateFilterRepository, IRepository<UserDesignation> userDesignationRepository, IRepository<Company> companyRepositary, IRepository<Location> locationRepositary, IRepository<LeadReason> leadReasonRepositary,
            IRepository<Designation> designationRepositary, IBinaryObjectManager binaryObjectManager, IRepository<LeadDetail> LeadDetailRepository,IRepository<ProductCategory> productCategoryRepository,IRepository<SourceType> sourceTypeRepositary, IRepository<Country> countryRepository, IRepository<ProductGroup> productGroupRepositary, IRepository<EnquiryStatus> enquiryStatusRepository, IRepository<Industry> industryRepository,
-           IRepository<Activity> activityRepository, IWebUrlService webUrlService, IRepository<View> viewRepository, IRepository<ProductStates> ProductStatesRepository, IRepository<TemporaryProductImage> TempProductImageRepository, IRepository<Discount> discountRepository,IRepository<LeadStatus> leadStatusRepository, IRepository<Stagestate> StagestateRepository,IRepository<Ybafco> ybafcoRepository, IRepository<OpportunitySource> opportunitySourceRepository,RoleManager roleManager, IRepository<EnquiryDetail> enquiryDetailRepository, IRepository<StageDetails> StageDetailRepository,IRepository<TemporaryProduct> temporaryProductRepository,IRepository<TeamDetail> TeamDetailRepository, IRepository<Teams> TeamRepository, IRepository<ProductImageUrl> productImageUrlRepository, IRepository<Inquiry> inquiryRepository,IRepository<QuotationStatus> quotationStatusRepository,IRepository<NewContactInfo> NewContactInfoRepository, IRepository<Product> productRepository, IRepository<Section> sectionRepository,IRepository<ProductAttributeGroup> ProductAttributeGroupRepository,IRepository<ProductSpecification> ProductSpecificationRepository,IRepository<ProductFamily> productFamilyRepository, IRepository<ProductAttribute> ProductAttributeRepository, IRepository<PriceLevel> PriceLevelRepository, IRepository<ProductSubGroup> productSubGroupRepositary, IRepository<LeadType> LeadTypeRepository, IRepository<LeadSource> LeadSourceRepository,IRepository<NewInfoType> newInfoTypeRepositary, IRepository<NewCustomerType> newCustomerTypeRepositary, IRepository<UserRole, long> userRoleRepository)
+           IRepository<Activity> activityRepository, IRepository<Finished> FinishedRepository, IWebUrlService webUrlService, IRepository<View> viewRepository, IRepository<ProductStates> ProductStatesRepository, IRepository<TemporaryProductImage> TempProductImageRepository, IRepository<Discount> discountRepository,IRepository<LeadStatus> leadStatusRepository, IRepository<Stagestate> StagestateRepository,IRepository<Ybafco> ybafcoRepository, IRepository<OpportunitySource> opportunitySourceRepository,RoleManager roleManager, IRepository<EnquiryDetail> enquiryDetailRepository, IRepository<StageDetails> StageDetailRepository,IRepository<TemporaryProduct> temporaryProductRepository,IRepository<TeamDetail> TeamDetailRepository, IRepository<Teams> TeamRepository, IRepository<ProductImageUrl> productImageUrlRepository, IRepository<Inquiry> inquiryRepository,IRepository<QuotationStatus> quotationStatusRepository,IRepository<NewContactInfo> NewContactInfoRepository, IRepository<Product> productRepository, IRepository<Section> sectionRepository,IRepository<ProductAttributeGroup> ProductAttributeGroupRepository,IRepository<ProductSpecification> ProductSpecificationRepository,IRepository<ProductFamily> productFamilyRepository, IRepository<ProductAttribute> ProductAttributeRepository, IRepository<PriceLevel> PriceLevelRepository, IRepository<ProductSubGroup> productSubGroupRepositary, IRepository<LeadType> LeadTypeRepository, IRepository<LeadSource> LeadSourceRepository,IRepository<NewInfoType> newInfoTypeRepositary, IRepository<NewCustomerType> newCustomerTypeRepositary, IRepository<UserRole, long> userRoleRepository)
         {
             _cityRepository = cityRepository;
             _discountRepository = discountRepository;
@@ -185,6 +187,7 @@ namespace tibs.stem.Select2
             _viewRepository = viewRepository;
             _binaryObjectManager = binaryObjectManager;
             _webUrlService = webUrlService;
+            _FinishedRepository = FinishedRepository;
         }
 
         public async Task<Select2City> GetCity()
@@ -194,10 +197,23 @@ namespace tibs.stem.Select2
 
             if (CityDto.Count() > 0)
             {
-                var CityDtos = (from c in CityDto select new citydto { Id = c.Id, Name = c.CityName,Country = c.Country.CountryName});
+                var CityDtos = (from c in CityDto select new citydto { Id = c.Id, Name = c.CityName, Country = c.Country.CountryName });
                 sr.select2data = CityDtos.ToArray();
             }
 
+            return sr;
+        }
+
+        public async Task<Select2Result> GetFinishes()
+            {
+            Select2Result sr = new Select2Result();
+            var query = (from c in _FinishedRepository.GetAll() select c).ToArray();
+
+            if (query.Length > 0)
+            {
+                var finishes = (from c in query select new datadto { Id = c.Id, Name = c.Name }).ToArray();
+                sr.select2data = finishes;
+            }
             return sr;
         }
         public async Task<Select2product> GetSpecProduct(NullableIdDto input)
@@ -291,7 +307,8 @@ namespace tibs.stem.Select2
             {
                 var Account = (from c in UserManager.Users
                                join role in _userRoleRepository.GetAll() on c.Id equals role.UserId
-                               where role.RoleId == 4 || role.RoleId == 10 select c).ToArray();
+                               where role.RoleId == 4 || role.RoleId == 10 || role.RoleId == 17
+                               select c).ToArray();
 
                 var Accounts = (from c in Account select new datadtos { Id = c.Id, Name = c.UserName }).ToArray();
                 sr.select3data = Accounts;
@@ -305,7 +322,7 @@ namespace tibs.stem.Select2
             {
                 var Account = (from c in UserManager.Users
                                join role in _userRoleRepository.GetAll() on c.Id equals role.UserId
-                               where role.RoleId == 6
+                               where role.RoleId == 6 || role.RoleId == 17
                                select c).ToArray();
 
                 var Accounts = (from c in Account select new datadtos { Id = c.Id, Name = c.UserName }).ToArray();
@@ -425,7 +442,7 @@ namespace tibs.stem.Select2
 
             var company = (from c in _newCompanyRepositary.GetAll() where c.Name.Contains(input.Name) select c).ToArray();
 
-            if (userrole.DisplayName == "Sales Executive" || userrole.DisplayName == "Sales Manager / Sales Executive")
+            if (userrole.DisplayName == "Sales Executive" || userrole.DisplayName == "Sales Manager / Sales Executive" || userrole.DisplayName == "Sales Coordinator / Sales Executive")
             {
                 company = (from c in _newCompanyRepositary.GetAll().Where(p => p.AccountManagerId == userid) select c).ToArray();
 
@@ -731,7 +748,7 @@ namespace tibs.stem.Select2
                 var Account = (from c in depa
                                join u in UserManager.Users on c.Id equals u.DepartmentId
                                join role in _userRoleRepository.GetAll() on u.Id equals role.UserId
-                               where role.RoleId == 4
+                               where role.RoleId == 4 || role.RoleId == 17
                                group u by u into g
                                select new datadto { Id = (int)g.Key.Id, Name = g.Key.UserName }).ToArray();
 
@@ -1140,6 +1157,16 @@ namespace tibs.stem.Select2
                            select enq
                         ).ToArray();
             }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                Inquiry = (from enq in _inquiryRepository.GetAll()
+                           join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
+                           where enq.MileStoneId > 3 && enq.IsClosed != true && enqDetail.AssignedbyId == userid
+                           select enq).Union(from enq in _inquiryRepository.GetAll()
+                                             join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                                             where enq.MileStoneId > 3 && enq.IsClosed != true && leadDetail.CoordinatorId == userid
+                                             select enq).Distinct().OrderBy(p => p.Id).ToArray();
+            }
             else
             {
                 Inquiry = (from c in _inquiryRepository.GetAll() where c.MileStoneId > 3 && c.IsClosed != true select c).ToArray();
@@ -1225,7 +1252,7 @@ namespace tibs.stem.Select2
             {
                 var Salesman = (from c in UserManager.Users
                                 join role in _userRoleRepository.GetAll() on c.Id equals role.UserId
-                                where role.RoleId == 4
+                                where role.RoleId == 4 || role.RoleId == 17
                                 select c).ToArray();
                 var Salesmans = new List<datadtos>();
 
@@ -1300,7 +1327,7 @@ namespace tibs.stem.Select2
                          where urole.UserId == userid
                          select role).FirstOrDefault();
 
-            if (roles.DisplayName == "Sales Executive")
+            if (roles.DisplayName == "Sales Executive" || roles.DisplayName == "Sales Coordinator / Sales Executive")
             {
 
                 var Salesman = (from c in _TeamDetailRepository.GetAll() 
@@ -1454,7 +1481,7 @@ namespace tibs.stem.Select2
             {
                 team = (from r in _TeamRepository.GetAll().Where(p => p.SalesManagerId == userid) select r).ToArray();
             }
-            else if (userrole.DisplayName == "Sales Executive")
+            else if (userrole.DisplayName == "Sales Executive" || userrole.DisplayName == "Sales Coordinator / Sales Executive")
             {
                 team = (from r in _TeamRepository.GetAll()
                         join t in _TeamDetailRepository.GetAll() on r.Id equals t.TeamId
@@ -1640,7 +1667,7 @@ namespace tibs.stem.Select2
 
             var company = (from c in _newCompanyRepositary.GetAll() where c.Name.Contains(input.Name) select c).ToArray();
 
-            if (userrole.DisplayName == "Sales Executive" || userrole.DisplayName == "Sales Manager / Sales Executive")
+            if (userrole.DisplayName == "Sales Executive" || userrole.DisplayName == "Sales Manager / Sales Executive" || userrole.DisplayName == "Sales Coordinator / Sales Executive" || userrole.DisplayName == "Sales Coordinator / Sales Executive")
             {
                 company = (from c in _newCompanyRepositary.GetAll().Where(p => p.AccountManagerId == userid) select c).ToArray();
 
@@ -1959,7 +1986,7 @@ namespace tibs.stem.Select2
                 query = (from U in UserManager.Users
                          join TD in _TeamDetailRepository.GetAll() on U.Id equals TD.SalesmanId
                          join R in _userRoleRepository.GetAll() on TD.SalesmanId equals R.UserId
-                         where TD.SalesmanId == userid && R.RoleId == 4 
+                         where TD.SalesmanId == userid && R.RoleId == 4 || R.RoleId == 17
 
                          select new userprofiledto
                          {
@@ -1975,7 +2002,7 @@ namespace tibs.stem.Select2
                 query = (from U in UserManager.Users
                          join TD in _TeamDetailRepository.GetAll() on U.Id equals TD.SalesmanId
                          join role in _userRoleRepository.GetAll() on TD.SalesmanId equals role.UserId
-                         where role.RoleId == 4
+                         where role.RoleId == 4 || role.RoleId == 17
                          select new userprofiledto
                          {
                              Id = U.Id,

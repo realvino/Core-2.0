@@ -56,5 +56,8 @@ namespace tibs.stem.Inquirys
         Task<FileDto> GetSalesQuotationsToExcel();
         ListResultDto<CompanyEnquiryList> GetCompanyWiseInquiry(CompanyEnquiryInput input);
         Task<PagedResultDto<CompanyEnquiryList>> GetCompanyWiseInquiryGrid(CompanyInquiryInput input);
+        Task InquiryDesignerApproval(EntityDto input);
+        Task InquiryRevisionApproval(EntityDto input);
+        Task InquiryDesignerReject(EntityDto input);
     }
 }

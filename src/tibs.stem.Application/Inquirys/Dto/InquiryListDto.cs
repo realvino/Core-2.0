@@ -116,6 +116,10 @@ namespace tibs.stem.Inquirys.Dto
         public virtual bool Lost { get; set; }
         public bool Strike { get; set; }
         public string Revision { get; set; }
+        public virtual bool DesignerApproval { get; set; }
+        public virtual bool RevisionApproval { get; set; }
+        public virtual bool Stared { get; set; }
+        public virtual decimal Weightedvalue { get; set; }
     }
     public class ActivityColor
     {

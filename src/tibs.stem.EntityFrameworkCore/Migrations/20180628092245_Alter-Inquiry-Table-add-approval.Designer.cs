@@ -14,9 +14,10 @@ using tibs.stem.MultiTenancy.Payments;
 namespace tibs.stem.Migrations
 {
     [DbContext(typeof(stemDbContext))]
-    partial class stemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180628092245_Alter-Inquiry-Table-add-approval")]
+    partial class AlterInquiryTableaddapproval
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")

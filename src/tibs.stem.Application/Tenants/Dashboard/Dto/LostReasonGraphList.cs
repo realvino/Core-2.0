@@ -23,8 +23,8 @@ namespace tibs.stem.Tenants.Dashboard.Dto
     {
         public string UserId { get; set; }
         public string TeamId { get; set; }
-
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
     }
+
 }

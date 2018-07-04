@@ -273,7 +273,7 @@ namespace tibs.stem.NewCompanyContacts
 
             var query = _NewCompanyRepository.GetAll().Where(r => r.Id == 0);
 
-            if (userrole.DisplayName == "Sales Executive")
+           if (userrole.DisplayName == "Sales Executive" || userrole.DisplayName == "Sales Coordinator / Sales Executive")
             {
                 query = (from comp in _NewCompanyRepository.GetAll() where comp.AccountManagerId == userid select comp);
             }

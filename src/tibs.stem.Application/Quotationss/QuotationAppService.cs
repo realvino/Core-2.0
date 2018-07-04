@@ -205,6 +205,16 @@ namespace tibs.stem.Quotationss
                          select q
                         );
             }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                query = (from q in _quotationRepository.GetAll()
+                         where q.Revised == false && q.SalesPersonId == userid && q.IsClosed != true && q.Archieved != true && q.Void != true
+                         select q).Union(from q in _quotationRepository.GetAll()
+                                         join enq in _inquiryRepository.GetAll() on q.InquiryId equals enq.Id
+                                         join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                                         where q.Revised == false && leadDetail.CoordinatorId == userid && q.IsClosed != true && q.Archieved != true && q.Void != true
+                                         select q).Distinct().OrderBy(p => p.Id);
+            }
             else if (userrole.DisplayName == "Sales Coordinator")
             {
                 query = (from q in _quotationRepository.GetAll()
@@ -1609,6 +1619,16 @@ namespace tibs.stem.Quotationss
                          select q
                         );
             }
+            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            {
+                query = (from q in _quotationRepository.GetAll()
+                         where q.Revised == false && q.SalesPersonId == userid && q.IsClosed != true && q.Archieved != true && q.Void != true
+                         select q).Union(from q in _quotationRepository.GetAll()
+                                         join enq in _inquiryRepository.GetAll() on q.InquiryId equals enq.Id
+                                         join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                                         where q.Revised == false && leadDetail.CoordinatorId == userid && q.IsClosed != true && q.Archieved != true && q.Void != true
+                                         select q).Distinct().OrderBy(p => p.Id);
+            }
             else
             {
                 query = _quotationRepository.GetAll().Where(p => p.Revised == false);
@@ -1689,7 +1709,7 @@ namespace tibs.stem.Quotationss
                                 join role in _roleManager.Roles on urole.RoleId equals role.Id
                                 where urole.UserId == AbpSession.UserId
                                 select role).FirstOrDefault();
-                if (userrole.DisplayName == "Sales Executive")
+                if (userrole.DisplayName == "Sales Executive" || userrole.DisplayName == "Sales Coordinator / Sales Executive")
                     userid = Convert.ToString(AbpSession.UserId);
             }
 
@@ -3047,7 +3067,6 @@ namespace tibs.stem.Quotationss
             return _AllTeamReportExcelExporter.ExportToFile(TeamListDtos, TotalReport);
 
         }
-
         public void StandardPreviewExcelNew(NullableIdDto input)
         {
             var sectionGroup = (from s in _sectionRepository.GetAll() where s.QuotationId == input.Id select s).ToArray();
@@ -3274,6 +3293,22 @@ namespace tibs.stem.Quotationss
                 templateWorkbook.Write(fs);
             }
         }
+        public async Task QuotationRevaluation(QuotationRevaluationInput input)
+        {
+            ConnectionAppService db = new ConnectionAppService();
+            DataTable ds = new DataTable();
+            using (SqlConnection conn = new SqlConnection(db.ConnectionString()))
+            {
+                SqlCommand sqlComm = new SqlCommand("Quotation_Revaluation", conn);
+                sqlComm.Parameters.AddWithValue("@QuotationId", input.Id);
+                sqlComm.Parameters.AddWithValue("@Num", input.Type);
+                sqlComm.CommandType = CommandType.StoredProcedure;
+                conn.Open();
+                sqlComm.ExecuteNonQuery();
+                conn.Close();
+            }
+        }
+
     }
 
     public class DiscountEmailFirst
@@ -3297,6 +3332,11 @@ namespace tibs.stem.Quotationss
     {
         public int Id { get; set; }
         public virtual DateTime NextActivity { get; set; }
+    }
+    public class QuotationRevaluationInput
+    {
+        public int Id { get; set; }
+        public int Type { get; set; }
     }
     public class NumberToWordsConverter
     {
