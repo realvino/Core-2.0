@@ -26,7 +26,8 @@ namespace tibs.stem.Inquirys
         public virtual DateTime? AllottedDate { get; set; }
         public virtual DateTime? StartDate { get; set; }
         public virtual DateTime? EndDate { get; set; }
-        
+        public virtual bool NotApproved { get; set; }
+
     }
-    
+
 }

@@ -57,7 +57,9 @@ namespace tibs.stem.Inquirys
         ListResultDto<CompanyEnquiryList> GetCompanyWiseInquiry(CompanyEnquiryInput input);
         Task<PagedResultDto<CompanyEnquiryList>> GetCompanyWiseInquiryGrid(CompanyInquiryInput input);
         Task InquiryDesignerApproval(EntityDto input);
-        Task InquiryRevisionApproval(EntityDto input);
+        Task InquiryRevisionApproval(RevisionInput input);
         Task InquiryDesignerReject(EntityDto input);
+        ListResultDto<NotificationListDto> GetRevisionNotifications();
+        ListResultDto<NotificationListDto> GetSalesManagerNotifications();
     }
 }

@@ -54,5 +54,23 @@ namespace tibs.stem.Emailing
 
             }
         }
+        public string LostEmailTemplate()
+        {
+            using (var stream = typeof(EmailTemplateProvider).GetAssembly().GetManifestResourceStream("tibs.stem.Emailing.EmailTemplates.lostemtemp.html"))
+            {
+                try
+                {
+                    var bytes = stream.GetAllBytes();
+                    var template = Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
+                    return template;
+                }
+                catch (System.Exception ex)
+                {
+
+                    throw;
+                }
+
+            }
+        }
     }
 }

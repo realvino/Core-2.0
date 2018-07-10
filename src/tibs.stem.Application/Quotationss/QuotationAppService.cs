@@ -53,6 +53,7 @@ using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
+using tibs.stem.LeadReasons;
 
 namespace tibs.stem.Quotationss
 {
@@ -94,7 +95,7 @@ namespace tibs.stem.Quotationss
         private readonly IAllTeamReportExcelExporter _AllTeamReportExcelExporter;
         public static IConfigurationRoot Configuration { get; set; }
         private readonly IHostingEnvironment _hostingEnvironment;
-
+        private readonly IRepository<LeadReason> _leadReasonTrackRepository;
         public QuotationAppService(
             IRepository<Quotation> quotationRepository,
             IRepository<NewCompany> newCompanyRepository,
@@ -128,7 +129,8 @@ namespace tibs.stem.Quotationss
             IRepository<TemporaryProductImage> TempProductImageRepository,
             ITeamEnquiryReportExcelExporter TeamEnquiryReportExcelExporter,
             ITeamReportExcelExporter TeamReportExcelExporter,
-            IAllTeamReportExcelExporter AllTeamReportExcelExporter
+            IAllTeamReportExcelExporter AllTeamReportExcelExporter,
+            IRepository<LeadReason> leadReasonTrackRepository
             )
         {
             _quotationRepository = quotationRepository;
@@ -165,6 +167,7 @@ namespace tibs.stem.Quotationss
             _TeamReportExcelExporter = TeamReportExcelExporter;
             _AllTeamReportExcelExporter = AllTeamReportExcelExporter;
             _hostingEnvironment = hostingEnvironment;
+            _leadReasonTrackRepository = leadReasonTrackRepository;
         }
         public async Task<PagedResultDto<QuotationListDto>> GetQuotation(GetQuotationInput input)
         {
@@ -773,6 +776,7 @@ namespace tibs.stem.Quotationss
                     input.PONumber = null;
                     input.MileStoneId = 10;
                     input.StageId = lostStage;
+                    await SendLostMail(input.Id, input.CompatitorId, input.ReasonId, input.ReasonRemark);
                 }
                 else if (input.Lost == false)
                 {
@@ -1521,7 +1525,19 @@ namespace tibs.stem.Quotationss
         public async Task<int> QuotationRevision(QuotationRevisionInput input)
         {
             int quotationId = 0;
+            var approve = true;
             long userid = (long)AbpSession.UserId;
+            var userrole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
+
+
+            if (userrole.DisplayName == "Sales Manager" || userrole.DisplayName == "Sales Manager / Sales Executive" || userrole.DisplayName == "Chief Operations Manager")
+            {
+                approve = false;
+            }
             ConnectionAppService db = new ConnectionAppService();
             DataTable ds = new DataTable();
             using (SqlConnection con = new SqlConnection(db.ConnectionString()))
@@ -1530,6 +1546,8 @@ namespace tibs.stem.Quotationss
                 sqlComm.Parameters.AddWithValue("@QuotationId", input.Id);
                 sqlComm.Parameters.AddWithValue("@UserId", userid);
                 sqlComm.Parameters.AddWithValue("@NextActivity", input.NextActivity);
+                sqlComm.Parameters.AddWithValue("@type", input.TypeId);
+                sqlComm.Parameters.AddWithValue("@Approval", approve);
                 sqlComm.CommandType = CommandType.StoredProcedure;
                 using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
                 {
@@ -3308,7 +3326,48 @@ namespace tibs.stem.Quotationss
                 conn.Close();
             }
         }
+        public async Task SendLostMail(int id, int? CompatitorId, int? ReasonId, string ReasonRemark)
+        {
+            var cidd = "None";
+            var ridd = "None";
+            var rrk = "None";
+            var qut = (from r in _quotationRepository.GetAll()
+                       where r.Id == id && r.Revised != true
+                       select new LostEmailFirst
+                       {
+                           Id = r.Id,
+                           EnquiryId = r.InquiryId,
+                           SalesPersonId = r.SalesPersonId,
+                           EnquiryRefNo = r.Inquiry.SubMmissionId,
+                           QuotationRefNo = r.RefNo,
+                           FirstName = r.SalesPerson.Name,
+                           LastName = r.SalesPerson.Surname
+                       }).FirstOrDefault();
+            var qutsal = _quotationRepository.GetAll().Where(p => p.Id == id && p.Revised != true).Select(p => p.SalesPerson.UserName).FirstOrDefault();
+            var com = _quotationRepository.GetAll().Where(p => p.Id == id && p.Revised != true).Select(p => p.NewCompanys.Name).FirstOrDefault();
 
+            if (CompatitorId != null)
+            {
+                cidd = _newCompanyRepository.GetAll().Where(p => p.Id == (int)CompatitorId).Select(p => p.Name).FirstOrDefault();
+            }
+            if (ReasonId != null)
+            {
+                ridd = _leadReasonTrackRepository.GetAll().Where(p => p.Id == (int)ReasonId).Select(p => p.LeadReasonName).FirstOrDefault();
+            }
+            if (ReasonRemark != null)
+            {
+                rrk = com;
+            }
+            try
+            {
+                await _userEmailer.LostEmailSendSalesManager(qut.Id, qut.EnquiryId, cidd, ridd, rrk, qut.SalesPersonId, qut.EnquiryRefNo, qut.QuotationRefNo, qut.FirstName + ' ' + qut.LastName);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+        }
     }
 
     public class DiscountEmailFirst
@@ -3318,6 +3377,17 @@ namespace tibs.stem.Quotationss
         public virtual long? SalesPersonId { get; set; }
         public virtual string FirstName { get; set; }
         public virtual string LastName { get; set; }
+
+    }
+    public class LostEmailFirst
+    {
+        public int Id { get; set; }
+        public virtual string EnquiryRefNo { get; set; }
+        public virtual string QuotationRefNo { get; set; }
+        public virtual long? SalesPersonId { get; set; }
+        public virtual string FirstName { get; set; }
+        public virtual string LastName { get; set; }
+        public virtual int? EnquiryId { get; set; }
 
     }
     public class ForecastDataList
@@ -3331,6 +3401,7 @@ namespace tibs.stem.Quotationss
     public class QuotationRevisionInput
     {
         public int Id { get; set; }
+        public int TypeId { get; set; }
         public virtual DateTime NextActivity { get; set; }
     }
     public class QuotationRevaluationInput

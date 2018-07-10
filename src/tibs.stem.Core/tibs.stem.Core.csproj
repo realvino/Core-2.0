@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="Emailing\EmailTemplates\disemtemp.html" />
+    <None Remove="Emailing\EmailTemplates\lostemtemp.html" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="1.1.2" />
@@ -50,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Emailing\EmailTemplates\disemtemp.html" />
+    <EmbeddedResource Include="Emailing\EmailTemplates\lostemtemp.html" />
   </ItemGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='net461'">
     <DefineConstants>FEATURE_LDAP;FEATURE_SIGNALR</DefineConstants>

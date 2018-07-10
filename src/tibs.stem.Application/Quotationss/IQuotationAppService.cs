@@ -44,6 +44,7 @@ namespace tibs.stem.Quotationss
         Task<FileDto> GetTeamReportExcel(NullableIdDto input);
         Task<FileDto> GetAllTeamReportExcel();
         Task QuotationRevaluation(QuotationRevaluationInput input);
+        Task SendLostMail(int id, int? CompatitorId, int? ReasonId, string ReasonRemark);
     }
 
 }

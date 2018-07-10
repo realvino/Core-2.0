@@ -31,5 +31,6 @@ namespace tibs.stem.Authorization.Users
         /// <param name="chatMessage"></param>
         void TryToSendChatMessageMail(User user, string senderUsername, string senderTenancyName, ChatMessage chatMessage);
         Task DiscountEmailSendSalesManager(int Id, string EmailAddress, string QuotationRefNo, string SalesPerson);
-    }
+        Task LostEmailSendSalesManager(int Id, int? EnquiryId, string cidd, string ridd, string rrk, long? SalesPersonId, string EnquiryRefNo, string QuotationRefNo, string SalesPerson);
+     }
 }

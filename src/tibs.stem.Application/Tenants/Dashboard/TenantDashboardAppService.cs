@@ -595,5 +595,44 @@ namespace tibs.stem.Tenants.Dashboard
                 return data.ToArray();
             }
         }
+        public async Task<Array> GetLeadQuotationGraph(GraphInput input)
+        {
+
+            ConnectionAppService db = new ConnectionAppService();
+            DataTable viewtable = new DataTable();
+            using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+            {
+                SqlCommand sqlComm = new SqlCommand("spGraph_QuotationRainflow", con);
+                sqlComm.Parameters.AddWithValue("@UserId", input.UserId);
+                sqlComm.Parameters.AddWithValue("@TeamId", input.TeamId);
+                sqlComm.Parameters.AddWithValue("@StartDate", input.StartDate);
+                sqlComm.Parameters.AddWithValue("@EndDate", input.EndDate);
+                sqlComm.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                {
+                    da.Fill(viewtable);
+                }
+                con.Close();
+                System.Globalization.CultureInfo info = System.Globalization.CultureInfo.GetCultureInfo("en");
+                var data = (from DataRow dr in viewtable.Rows
+                            select new GetLeadQuotationGraphList
+                            {
+                                //SalesmanId = Convert.ToInt32(dr["SalesmanId"]),
+                                //Salesman = Convert.ToString(dr["Salesman"]),
+                                InquiryCount = Convert.ToInt32(dr["InquiryCount"]),
+                                QuotationCount = Convert.ToInt32(dr["Total"])
+                                //WonQuotationCount = Convert.ToInt32(dr["WonQuotationCount"]),
+                                //LostQuotationCount = Convert.ToInt32(dr["LostQuotationCount"]),
+                                //SubmittedQuotationCount = Convert.ToInt32(dr["SubmittedQuotationCount"])
+                            }).ToArray();
+
+                foreach(var da in data) {
+                    da.Salesman = da.QuotationCount.ToString("N2", info);
+                }
+                return data;
+            }
+        }
+
     }
 }

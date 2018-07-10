@@ -4,5 +4,6 @@
     {
         string GetDefaultTemplate(int? tenantId);
         string DiscountEmailTemplate();
+        string LostEmailTemplate();
     }
 }

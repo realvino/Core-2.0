@@ -1775,7 +1775,7 @@ namespace tibs.stem.Inquirys
 
         }
 
-        public virtual async Task InquiryRevisionApproval(EntityDto input)
+        public virtual async Task InquiryRevisionApproval(RevisionInput input)
         {
             long userid = (int)AbpSession.UserId;
 
@@ -1788,11 +1788,22 @@ namespace tibs.stem.Inquirys
 
             if (userrole.DisplayName == "Sales Manager / Sales Executive" || userrole.DisplayName == "Sales Manager" || userrole.DisplayName == "Chief Operations Manager")
             {
-                var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.Id).FirstOrDefault();
-                inq.RevisionApproval = true;
-                await _inquiryRepository.UpdateAsync(inq);
+
+                    ConnectionAppService db = new ConnectionAppService();
+                    DataTable ds = new DataTable();
+                    using (SqlConnection conn = new SqlConnection(db.ConnectionString()))
+                    {
+                        SqlCommand sqlComm = new SqlCommand("Sp_RevisionApproval", conn);
+                        sqlComm.Parameters.AddWithValue("@Id", input.TypeId);
+                        sqlComm.Parameters.AddWithValue("@InquiryId", input.Id);
+                        sqlComm.CommandType = CommandType.StoredProcedure;
+                        conn.Open();
+                        sqlComm.ExecuteNonQuery();
+                        conn.Close();
+                    }
             }
         }
+
         public async Task<Array> GetInquiryTickets(GetTicketInput input)
         {
             var SupportMileStones = (from r in _milestoneRepository.GetAll() where r.Id < 5 select r).ToArray();
@@ -3173,7 +3184,7 @@ namespace tibs.stem.Inquirys
             var query = _jobActivityRepository.GetAll().Where(p => p.InquiryId == 0);
             if (inq.DesignerApproval == true)
             {
-               query = _jobActivityRepository.GetAll().Where(p => p.InquiryId == input.Id);
+               query = _jobActivityRepository.GetAll().Where(p => p.InquiryId == input.Id && p.NotApproved != true);
             }
                 var JobActivity = (from a in query
                                    select new JobActivityList
@@ -3218,7 +3229,8 @@ namespace tibs.stem.Inquirys
                                        AllottedDate = a.AllottedDate,
                                        EndDate = a.EndDate,
                                        StartDate = a.StartDate,
-                                       JobNumber = a.JobNumber
+                                       JobNumber = a.JobNumber,
+                                       NotApproved = a.NotApproved
                                    }).FirstOrDefault();
 
                 output = new GetJobActivity
@@ -3241,12 +3253,21 @@ namespace tibs.stem.Inquirys
         }
         public virtual async Task CreateJobActivityAsync(CreateJobActivityInput input)
         {
-            var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.InquiryId).FirstOrDefault();
-            var jobcount = _jobActivityRepository.GetAll().Where(p => p.InquiryId == input.InquiryId).Count()+1;
-            input.JobNumber = inq.SubMmissionId + "-D" + jobcount;
-  
-            var JobActivity = input.MapTo<JobActivity>();
-            await _jobActivityRepository.InsertAsync(JobActivity);
+            var count = _jobActivityRepository.GetAll().Where(p => p.NotApproved == true && p.InquiryId == input.InquiryId).FirstOrDefault();
+            if(count == null)
+            {
+                var inq = _inquiryRepository.GetAll().Where(p => p.Id == input.InquiryId).FirstOrDefault();
+                var jobcount = _jobActivityRepository.GetAll().Where(p => p.InquiryId == input.InquiryId).Count() + 1;
+                input.JobNumber = inq.SubMmissionId + "-D" + jobcount;
+
+                var JobActivity = input.MapTo<JobActivity>();
+                await _jobActivityRepository.InsertAsync(JobActivity);
+            }
+            else
+            {
+                throw new UserFriendlyException("Ooops!", "Designer job was pending to approve, Please contact your Manager ...");
+            }
+
         }
         public virtual async Task UpdateJobActivityAsync(CreateJobActivityInput input)
         {
@@ -3547,7 +3568,7 @@ namespace tibs.stem.Inquirys
                     query = (from job in _jobActivityRepository.GetAll()
                              join enqDetail in _enquiryDetailRepository.GetAll() on job.InquiryId equals enqDetail.InquiryId
                              join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
-                             where enqDetail.AssignedbyId == userid && job.DesignerId == input.DesignerId
+                             where enqDetail.AssignedbyId == userid && job.DesignerId == input.DesignerId && job.NotApproved != true
                              select job
                         );
                 }
@@ -3556,7 +3577,7 @@ namespace tibs.stem.Inquirys
                     query = (from job in _jobActivityRepository.GetAll()
                              join enqDetail in _enquiryDetailRepository.GetAll() on job.InquiryId equals enqDetail.InquiryId
                              join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
-                             where enqDetail.AssignedbyId == userid
+                             where enqDetail.AssignedbyId == userid && job.NotApproved != true
                              select job
                         );
                 }
@@ -3569,7 +3590,7 @@ namespace tibs.stem.Inquirys
                              join enqDetail in _enquiryDetailRepository.GetAll() on job.InquiryId equals enqDetail.InquiryId
                              join team in _TeamRepository.GetAll() on enqDetail.TeamId equals team.Id
                              join usr in UserManager.Users on team.SalesManagerId equals usr.Id
-                             where team.SalesManagerId == userid && job.DesignerId == input.DesignerId
+                             where team.SalesManagerId == userid && job.DesignerId == input.DesignerId && job.NotApproved != true
                              select job
                         );
                 }
@@ -3579,7 +3600,7 @@ namespace tibs.stem.Inquirys
                              join enqDetail in _enquiryDetailRepository.GetAll() on job.InquiryId equals enqDetail.InquiryId
                              join team in _TeamRepository.GetAll() on enqDetail.TeamId equals team.Id
                              join usr in UserManager.Users on team.SalesManagerId equals usr.Id
-                             where team.SalesManagerId == userid
+                             where team.SalesManagerId == userid && job.NotApproved != true
                              select job
                         );
                 }
@@ -3587,7 +3608,7 @@ namespace tibs.stem.Inquirys
             else if (userrole.DisplayName == "Designer")
             {
                 query = (from job in _jobActivityRepository.GetAll()
-                         where job.DesignerId == userid
+                         where job.DesignerId == userid && job.NotApproved != true
                          select job
                         );
             }
@@ -3597,7 +3618,7 @@ namespace tibs.stem.Inquirys
                 {
                     query = (from job in _jobActivityRepository.GetAll()
                              join leadDetail in _LeadDetailRepository.GetAll() on job.InquiryId equals leadDetail.InquiryId
-                             where leadDetail.CoordinatorId == userid && job.DesignerId == input.DesignerId
+                             where leadDetail.CoordinatorId == userid && job.DesignerId == input.DesignerId && job.NotApproved != true
                              select job
                         );
                 }
@@ -3605,7 +3626,7 @@ namespace tibs.stem.Inquirys
                 {
                     query = (from job in _jobActivityRepository.GetAll()
                              join leadDetail in _LeadDetailRepository.GetAll() on job.InquiryId equals leadDetail.InquiryId
-                             where leadDetail.CoordinatorId == userid
+                             where leadDetail.CoordinatorId == userid && job.NotApproved != true
                              select job
                         );
                 }
@@ -3617,10 +3638,10 @@ namespace tibs.stem.Inquirys
                     query = (from job in _jobActivityRepository.GetAll()
                              join enqDetail in _enquiryDetailRepository.GetAll() on job.InquiryId equals enqDetail.InquiryId
                              join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
-                             where enqDetail.AssignedbyId == userid && job.DesignerId == input.DesignerId
+                             where enqDetail.AssignedbyId == userid && job.DesignerId == input.DesignerId && job.NotApproved != true
                              select job).Union(from job in _jobActivityRepository.GetAll()
                                                join leadDetail in _LeadDetailRepository.GetAll() on job.InquiryId equals leadDetail.InquiryId
-                                               where leadDetail.CoordinatorId == userid && job.DesignerId == input.DesignerId
+                                               where leadDetail.CoordinatorId == userid && job.DesignerId == input.DesignerId && job.NotApproved != true
                                                select job).Distinct().OrderBy(p => p.Id);
                 }
                 else
@@ -3628,10 +3649,10 @@ namespace tibs.stem.Inquirys
                     query = (from job in _jobActivityRepository.GetAll()
                              join enqDetail in _enquiryDetailRepository.GetAll() on job.InquiryId equals enqDetail.InquiryId
                              join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
-                             where enqDetail.AssignedbyId == userid
+                             where enqDetail.AssignedbyId == userid && job.NotApproved != true
                              select job).Union(from job in _jobActivityRepository.GetAll()
                                                join leadDetail in _LeadDetailRepository.GetAll() on job.InquiryId equals leadDetail.InquiryId
-                                               where leadDetail.CoordinatorId == userid
+                                               where leadDetail.CoordinatorId == userid && job.NotApproved != true
                                                select job).Distinct().OrderBy(p => p.Id);
                 }
             }
@@ -3639,11 +3660,11 @@ namespace tibs.stem.Inquirys
             {
                if (input.DesignerId > 0)
                 {
-                    query = _jobActivityRepository.GetAll().Where(p => p.DesignerId == input.DesignerId);
+                    query = _jobActivityRepository.GetAll().Where(p => p.DesignerId == input.DesignerId && p.NotApproved != true);
                 }
                 else
                 {
-                    query = _jobActivityRepository.GetAll();
+                    query = _jobActivityRepository.GetAll().Where(p => p.NotApproved != true);
                 }
             }
 
@@ -4880,7 +4901,61 @@ namespace tibs.stem.Inquirys
                               }).ToList();
             return new ListResultDto<NotificationListDto>(NewStatuss.MapTo<List<NotificationListDto>>());
         }
+        public ListResultDto<NotificationListDto> GetRevisionNotifications()
+        {
+            long userid = (int)AbpSession.UserId;
+            var userrole = (from a in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on a.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
 
+
+            var query = (from enq in _inquiryRepository.GetAll()
+                         join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
+                         join jobDetail in _jobActivityRepository.GetAll() on enq.Id equals jobDetail.InquiryId
+                         where enq.Id == 0
+                         select enqDetail);
+
+            if (userrole.DisplayName == "Sales Manager" || userrole.DisplayName == "Sales Manager / Sales Executive" || userrole.DisplayName == "Chief Operations Manager")
+            {
+                query = (from enq in _inquiryRepository.GetAll()
+                         join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
+                         join leadDetail in _LeadDetailRepository.GetAll() on enq.Id equals leadDetail.InquiryId
+                         join jobDetail in _jobActivityRepository.GetAll() on enq.Id equals jobDetail.InquiryId
+                         join team in _TeamRepository.GetAll() on enqDetail.TeamId equals team.Id
+                         join usr in UserManager.Users on team.SalesManagerId equals usr.Id
+                         where enq.Junk != true && enq.Archieved != true && enq.IsClosed != true && team.SalesManagerId == userid && enq.MileStoneId > 3 && jobDetail.NotApproved == true && leadDetail.DesignerId > 0
+                         select enqDetail
+                        ).Distinct();
+            }
+
+
+            var NewStatuss = (from a in query
+                              select new NotificationListDto
+                              {
+                                  Id = a.Inquirys.Id,
+                                  Name = a.Inquirys.Name,
+                                  SubmissionId = a.Inquirys.SubMmissionId,
+                                  DesignerApproval = a.Inquirys.DesignerApproval,
+                                  RevisionApproval = a.Inquirys.RevisionApproval
+                              });
+
+
+            //var dis = (from emp in NewStatuss select new { emp.Id, emp.Name, emp.SubmissionId,emp.DesignerApproval,emp.RevisionApproval }).Distinct();
+
+            //NewStatuss = (from a in dis
+            //                  select new NotificationListDto
+            //                  {
+            //                      Id = a.Id,
+            //                      Name = a.Name,
+            //                      SubmissionId = a.SubmissionId,
+            //                      DesignerApproval = a.DesignerApproval,
+            //                      RevisionApproval = a.RevisionApproval
+            //                  });
+
+            return new ListResultDto<NotificationListDto>(NewStatuss.MapTo<List<NotificationListDto>>());
+        }
     }
     public class monthdto
     {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Abp.Authorization.Users;
@@ -10,11 +11,15 @@ using Abp.Domain.Uow;
 using Abp.Extensions;
 using Abp.Localization;
 using Abp.Net.Mail;
+using Abp.UI;
 using tibs.stem.Chat;
 using tibs.stem.Editions;
 using tibs.stem.Emailing;
+using tibs.stem.LeadDetails;
 using tibs.stem.Localization;
 using tibs.stem.MultiTenancy;
+using tibs.stem.Team;
+using tibs.stem.TeamDetails;
 using tibs.stem.Url;
 
 namespace tibs.stem.Authorization.Users
@@ -33,7 +38,13 @@ namespace tibs.stem.Authorization.Users
         private readonly ISettingManager _settingManager;
         private readonly EditionManager _editionManager;
         private readonly IWebUrlService _webUrlService;
+        private readonly IRepository<Teams> _teamRepository;
+        private readonly IRepository<TeamDetail> _teamDetailRepository;
+        private readonly IRepository<LeadDetail> _leadDetailRepository;
         public UserEmailer(
+            IRepository<Teams> teamRepository,
+            IRepository<TeamDetail> teamDetailRepository,
+            IRepository<LeadDetail> leadDetailRepository,
             IEmailTemplateProvider emailTemplateProvider,
             IEmailSender emailSender,
             IRepository<Tenant> tenantRepository,
@@ -43,6 +54,9 @@ namespace tibs.stem.Authorization.Users
             IWebUrlService webUrlService,
             ISettingManager settingManager, EditionManager editionManager)
         {
+            _teamRepository = teamRepository;
+            _teamDetailRepository = teamDetailRepository;
+            _leadDetailRepository = leadDetailRepository;
             _emailTemplateProvider = emailTemplateProvider;
             _emailSender = emailSender;
             _tenantRepository = tenantRepository;
@@ -320,12 +334,57 @@ namespace tibs.stem.Authorization.Users
         }
         public async Task DiscountEmailSendSalesManager(int Id, string EmailAddress, string QuotationRefNo, string SalesPerson)
         {
-            var edq = _webUrlService.GetServerRootAddress();
+            var edq = _webUrlService.GetSiteRootAddress();
             var emailTemplate = new StringBuilder(_emailTemplateProvider.DiscountEmailTemplate());
             emailTemplate.Replace("{QuotationRefNo}", QuotationRefNo);
             emailTemplate.Replace("{SalesPerson}", SalesPerson);
             emailTemplate.Replace("{WebsiteUrl}", edq + "/app/main/quotation/" + Id);
             await _emailSender.SendAsync(EmailAddress, "Discount Email for Quotation" + QuotationRefNo, emailTemplate.ToString());
+        }
+        public async Task LostEmailSendSalesManager(int Id, int? EnquiryId, string cidd, string ridd, string rrk, long? SalesPersonId, string EnquiryRefNo, string QuotationRefNo, string SalesPerson)
+        {
+            var edq = _webUrlService.GetSiteRootAddress();
+            var emailTemplate = new StringBuilder(_emailTemplateProvider.LostEmailTemplate());
+            emailTemplate.Replace("{Competitor}", cidd);
+            emailTemplate.Replace("{LostReason}", ridd);
+            emailTemplate.Replace("{ReasonRemark}", rrk);
+            emailTemplate.Replace("{EnquiryRefNo}", EnquiryRefNo);
+            emailTemplate.Replace("{QuotationRefNo}", QuotationRefNo);
+            emailTemplate.Replace("{SalesPerson}", SalesPerson);
+            emailTemplate.Replace("{WebsiteUrl}", edq + "/app/main/quotation/" + Id);
+
+            var salesmanageremail = (from a in _teamDetailRepository.GetAll()
+                                     where a.SalesmanId == SalesPersonId && a.IsDeleted == false
+                                     join b in _teamRepository.GetAll().Where(p => p.IsDeleted == false) on a.TeamId equals b.Id
+                                     select b.SalesManager.EmailAddress).FirstOrDefault();
+            var salesexecutiveemail = _userRepository.GetAll().Where(p => p.Id == SalesPersonId).Select(p => p.EmailAddress).FirstOrDefault();
+
+            var leaddetail = _leadDetailRepository.GetAll().Where(p => p.InquiryId == EnquiryId).FirstOrDefault();
+            if (salesexecutiveemail != null)
+            {
+                //salesmanageremail = salesmanageremail + "," + salesexecutiveemail;
+                await _emailSender.SendAsync(salesexecutiveemail, "Lost Email for Enquiry : " + EnquiryRefNo, emailTemplate.ToString());
+            }
+            if (leaddetail.CoordinatorId != null)
+            {
+                var coordinator = _userRepository.GetAll().Where(p => p.Id == leaddetail.CoordinatorId).Select(p => p.EmailAddress).FirstOrDefault();
+                //salesmanageremail = salesmanageremail + "," + coordinator;
+                await _emailSender.SendAsync(coordinator, "Lost Email for Enquiry : " + EnquiryRefNo, emailTemplate.ToString());
+            }
+            if (leaddetail.DesignerId != null)
+            {
+                var designer = _userRepository.GetAll().Where(p => p.Id == leaddetail.DesignerId).Select(p => p.EmailAddress).FirstOrDefault();
+                //salesmanageremail = salesmanageremail + "," + designer;
+                await _emailSender.SendAsync(designer, "Lost Email for Enquiry : " + EnquiryRefNo, emailTemplate.ToString());
+            }
+            try
+            {
+                await _emailSender.SendAsync(salesmanageremail, "Lost Email for Enquiry : " + EnquiryRefNo, emailTemplate.ToString());
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
     }
 }

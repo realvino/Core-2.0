@@ -28,6 +28,7 @@ namespace tibs.stem.Inquirys.Dto
         public virtual string SendDate { get; set; }
         public virtual string SstartDate { get; set; }
         public virtual string ScreationTime { get; set; }
+        public virtual bool NotApproved { get; set; }
 
     }
 }

@@ -21,5 +21,7 @@ namespace tibs.stem.Inquirys.Dto
         public virtual DateTime? EndDate { get; set; }
         public virtual string JobNumber { get; set; }
         public virtual DateTime? StartDate { get; set; }
+        public virtual bool NotApproved { get; set; }
+
     }
 }

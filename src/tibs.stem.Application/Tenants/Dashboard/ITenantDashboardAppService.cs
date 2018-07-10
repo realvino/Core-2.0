@@ -12,17 +12,11 @@ namespace tibs.stem.Tenants.Dashboard
     public interface ITenantDashboardAppService : IApplicationService
     {
         GetMemberActivityOutput GetMemberActivity();
-
         GetDashboardDataOutput GetDashboardData(GetDashboardDataInput input);
-
         GetSalesSummaryOutput GetSalesSummary(GetSalesSummaryInput input);
-
         GetWorldMapOutput GetWorldMap(GetWorldMapInput input);
-
         GetServerStatsOutput GetServerStats(GetServerStatsInput input);
-
         GetGeneralStatsOutput GetGeneralStats(GetGeneralStatsInput input);
-
         Task<GetDiscount> GetDiscountForEdit(NullableIdDto input);
         Task CreateOrUpdateDiscount(CreateDiscountInput input);
         Task<Array> GetLeadSummaryGraph(GraphInput input);
@@ -33,5 +27,6 @@ namespace tibs.stem.Tenants.Dashboard
         Task<SelectDResult> GetDashboardTeam();
         Task<GetSalesLeadList> GetSalesLeadSummary();
         Task<GetConvertionratio> GetConversionRatioGraph(GraphInput input);
+        Task<Array> GetLeadQuotationGraph(GraphInput input);
     }
 }
