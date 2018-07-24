@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using tibs.stem.Authorization;
@@ -302,6 +303,7 @@ namespace tibs.stem.Tenants.Dashboard
                                select new RecentInquiryClosureDto
                                {
                                    Week = Convert.ToString(dr["Week"].ToString()),
+                                   Month = Convert.ToString(dr["Month"].ToString()),
                                    ClosureDate = Convert.ToString(dr["ClosureDate"]),
                                    SubMmissionId = Convert.ToString(dr["SubMmissionId"]),
                                    InquiryName = Convert.ToString(dr["InquiryName"]),
@@ -316,11 +318,16 @@ namespace tibs.stem.Tenants.Dashboard
                                    Stage = Convert.ToString(dr["Stage"]),
                                    Total = Convert.ToString(dr["Total"]),
                                    StageName = Convert.ToString(dr["StageName"]),
-                                   MileStone = Convert.ToString(dr["Milestone"])
+                                   MileStone = Convert.ToString(dr["Milestone"]),
+                                   Value = Convert.ToDecimal(dr["Total"]),
                                }).ToList();
 
                 var SubListout = new RecentInquiryClosureList
                 {
+                    MonthValue = (from r in Listdto where r.Month == "Y" select r.Value).Sum().ToString("N", new CultureInfo("en-US")),
+                    ThisweekValue = (from r in Listdto where r.Week == "This Week" select r.Value).Sum().ToString("N", new CultureInfo("en-US")),
+                    NextWeekValue = (from r in Listdto where r.Week == "Next Week" select r.Value).Sum().ToString("N", new CultureInfo("en-US")),
+                    ThisMonthClosureInquiry = (from r in Listdto where r.Month == "Y" select r).ToArray(),
                     ThisWeekClosureInquiry = (from r in Listdto where r.Week == "This Week" select r).ToArray(),
                     NextWeekClosureInquiry = (from r in Listdto where r.Week == "Next Week" select r).ToArray()
                 };
@@ -361,11 +368,15 @@ namespace tibs.stem.Tenants.Dashboard
                                    Stage = Convert.ToString(dr["Stage"]),
                                    Total = Convert.ToString(dr["Total"]),
                                    StageName = Convert.ToString(dr["StageName"]),
-                                   MileStone = Convert.ToString(dr["Milestone"])
+                                   MileStone = Convert.ToString(dr["Milestone"]),
+                                   Value = Convert.ToDecimal(dr["Value"])
                                });
 
                 var SubListout = new RecentInquiryActivityList
                 {
+                    OverDueValue = (from r in Listdto where r.Week == "Over Due" select r.Value).Sum().ToString("N", new CultureInfo("en-US")),
+                    ThisweekValue = (from r in Listdto where r.Week == "This Week" select r.Value).Sum().ToString("N", new CultureInfo("en-US")),
+                    NextWeekValue = (from r in Listdto where r.Week == "Next Week" select r.Value).Sum().ToString("N", new CultureInfo("en-US")),
                     ThisWeekActivityInquiry = (from r in Listdto where r.Week == "This Week" select r).ToArray(),
                     NextWeekActivityInquiry = (from r in Listdto where r.Week == "Next Week" select r).ToArray(),
                     OverDueActivityInquiry = (from r in Listdto where r.Week == "Over Due" select r).ToArray()
@@ -443,7 +454,7 @@ namespace tibs.stem.Tenants.Dashboard
             }
             return cc;
         }
-        public List<SliderDataList> GetSalesExecutive(String datainput, bool IsSales)
+        public List<SliderDataList> GetSalesExecutive(String datainput, bool IsSales, DateTime StartDate,DateTime EndDate)
         {
             var Datas = new List<SliderDataList>();
 
@@ -484,8 +495,89 @@ namespace tibs.stem.Tenants.Dashboard
                             Name = Convert.ToString(dr["UserName"]),
                             ProfilePicture = _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + Convert.ToString(dr["ProfilePictureUrl"]),
                             Email = Convert.ToString(dr["EmailAddress"]),
-                            Phone = Convert.ToString(dr["PhoneNumber"])
-                        });
+                            Phone = Convert.ToString(dr["PhoneNumber"]),
+                            ConversionCount = 0,
+                            TConversionCount = 0,
+                            Conversionratio = 0,
+                            TConversionratio = 0
+                        }).ToList();
+            int i = 0;
+            foreach (var d in data)
+            {
+                DataTable viewtable2 = new DataTable();
+                using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+                {
+                    SqlCommand sqlComm = new SqlCommand("spGraph_QuotationRainflow_90", con);
+                    sqlComm.Parameters.AddWithValue("@UserId", d.Id);
+                    sqlComm.Parameters.AddWithValue("@TeamId", datainput);
+                    sqlComm.Parameters.AddWithValue("@StartDate",StartDate);
+                    sqlComm.Parameters.AddWithValue("@EndDate",EndDate);
+                    sqlComm.CommandType = CommandType.StoredProcedure;
+                    con.Open();
+                    using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                    {
+                        da.Fill(viewtable2);
+                    }
+                    con.Close();
+                    var datas = (from DataRow dr in viewtable2.Rows
+                                 select new GetLeadQuotationGraphListdto
+                                 {
+                                     Id = Convert.ToInt32(dr["Id"]),
+                                     Total = Convert.ToDecimal(dr["Total"]),
+                                     Won = Convert.ToBoolean(dr["Won"]),
+                                     Submitted = Convert.ToBoolean(dr["Submitted"]),
+                                     Lost = Convert.ToBoolean(dr["Lost"]),
+                                     Stared = Convert.ToBoolean(dr["Stared"]),
+                                     TenderProject = Convert.ToBoolean(dr["TenderProject"]),
+                                     //SubmittedDate = Convert.ToDateTime(dr["SubmittedDate"]),
+                                     QuotationRefno = Convert.ToString(dr["QuotationRefno"]),
+                                     StatusId = Convert.ToInt32(dr["StatusId"]),
+                                     Weighted = Convert.ToDecimal(dr["W"])
+
+                                 }).ToList();
+
+                    var WTotalvalue = (from r in datas where r.TenderProject != true && r.Won == true select r.Total).Sum();
+                    var WTendervalue = (from r in datas where r.TenderProject == true && r.Won == true select r.Total).Sum();
+
+                    var LTotalvalue = (from r in datas where r.TenderProject != true && r.Lost == true select r.Total).Sum();
+                    var LTendervalue = (from r in datas where r.TenderProject == true && r.Lost == true select r.Total).Sum();
+
+
+                    var WTotalCount = (from r in datas where r.TenderProject != true && r.Won == true select r).Count();
+                    var WTenderCount = (from r in datas where r.TenderProject == true && r.Won == true select r).Count();
+
+                    var LTotalCount = (from r in datas where r.TenderProject != true && r.Lost == true select r).Count();
+                    var LTenderCount = (from r in datas where r.TenderProject == true && r.Lost == true select r).Count();
+
+
+                    if ((WTotalvalue + LTotalvalue) > 0)
+                    {
+                        data[i].Conversionratio = Math.Round((decimal)(WTotalvalue / (WTotalvalue+ LTotalvalue)) * 100, 2);
+                    }
+                    if ((WTendervalue + LTendervalue) > 0)
+                    {
+                        data[i].TConversionratio = Math.Round((decimal)(WTendervalue / (WTendervalue + LTendervalue)) * 100, 2);
+                    }
+
+                    data[i].ConversionCount = LTotalCount;
+
+                    if ((WTotalCount) > 0)
+                    {
+                        data[i].ConversionCount = (WTotalCount + LTotalCount)/WTotalCount;
+                    }
+
+                    data[i].TConversionCount = LTenderCount;
+
+                    if ((WTenderCount) > 0)
+                    {
+                        data[i].TConversionCount = (WTenderCount + LTenderCount)/ WTenderCount;
+                    }
+
+                    i++;
+
+                }
+  
+        }
             var Outdata = data.MapTo<List<SliderDataList>>();
             try
             {
@@ -614,25 +706,312 @@ namespace tibs.stem.Tenants.Dashboard
                     da.Fill(viewtable);
                 }
                 con.Close();
-                System.Globalization.CultureInfo info = System.Globalization.CultureInfo.GetCultureInfo("en");
                 var data = (from DataRow dr in viewtable.Rows
                             select new GetLeadQuotationGraphList
                             {
-                                //SalesmanId = Convert.ToInt32(dr["SalesmanId"]),
-                                //Salesman = Convert.ToString(dr["Salesman"]),
                                 InquiryCount = Convert.ToInt32(dr["InquiryCount"]),
-                                QuotationCount = Convert.ToInt32(dr["Total"])
-                                //WonQuotationCount = Convert.ToInt32(dr["WonQuotationCount"]),
-                                //LostQuotationCount = Convert.ToInt32(dr["LostQuotationCount"]),
-                                //SubmittedQuotationCount = Convert.ToInt32(dr["SubmittedQuotationCount"])
+                                Total = Convert.ToDecimal(dr["Total"])
                             }).ToArray();
 
                 foreach(var da in data) {
-                    da.Salesman = da.QuotationCount.ToString("N2", info);
+                    da.STotal = da.Total.ToString("N", new CultureInfo("en-US"));
                 }
                 return data;
             }
         }
+        public List<SliderDataList> GetUserDesignerSlider()
+        {
+            var Datas = new List<SliderDataList>();
+
+            string selectQuery = "SELECT * FROM [dbo].[View_UserDesignerSlider]";
+
+            long userId = (long)AbpSession.UserId;
+            var userrole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userId
+                            select role).FirstOrDefault();
+
+            if (userrole.DisplayName == "Designer")
+            {
+                selectQuery = "SELECT * FROM [dbo].[View_UserDesignerSlider] WHERE DesignerId= " + userId + " AND UserId= 2";
+            }
+            else
+            {
+                selectQuery = "SELECT * FROM [dbo].[View_UserDesignerSlider] WHERE DesignerId= 1 OR UserId=" + userId;
+            }
+
+            DataTable viewtable = new DataTable();
+            ConnectionAppService db = new ConnectionAppService();
+            SqlConnection con = new SqlConnection(db.ConnectionString());
+            con.Open();
+            SqlCommand cmd = new SqlCommand(selectQuery, con);
+            using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+            {
+                sda.Fill(viewtable);
+            }
+            con.Close();
+            var data = (from DataRow dr in viewtable.Rows
+                        select new SliderDataList
+                        {
+                            Id = Convert.ToInt32(dr["DesignerId"]),
+                            TeamId = Convert.ToInt32(dr["UserId"]),
+                            Name = Convert.ToString(dr["DesignerName"]),
+                            ProfilePicture = _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + Convert.ToString(dr["ProfilePictureUrl"]),
+                            Email = Convert.ToString(dr["EmailAddress"]),
+                            Phone = Convert.ToString(dr["PhoneNumber"])
+                        });
+            var Outdata = data.MapTo<List<SliderDataList>>();
+            return Outdata;
+        }
+        public async Task<RecentInquiryClosureList> GetDesignerRecentClosure(NullableIdDto input)
+        {
+            long userId = (int)AbpSession.UserId;
+            ConnectionAppService db = new ConnectionAppService();
+            DataTable dt = new DataTable();
+            using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+            {
+                SqlCommand sqlComm = new SqlCommand("Sp_DesignerRecentClosureInquiry", con);
+                sqlComm.Parameters.AddWithValue("@DesignerId", input.Id);
+                sqlComm.Parameters.AddWithValue("@UserId", userId);
+                sqlComm.CommandType = CommandType.StoredProcedure;
+                using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                {
+                    da.Fill(dt);
+                }
+
+                var Listdto = (from DataRow dr in dt.Rows
+                               select new RecentInquiryClosureDto
+                               {
+                                   Week = Convert.ToString(dr["Week"].ToString()),
+                                   ClosureDate = Convert.ToString(dr["ClosureDate"]),
+                                   SubMmissionId = Convert.ToString(dr["SubMmissionId"]),
+                                   InquiryName = Convert.ToString(dr["InquiryName"]),
+                                   InquiryId = Convert.ToInt32(dr["InquiryId"]),
+                                   Remarks = Convert.ToString(dr["Remarks"]),
+                                   CreatorImage = Convert.ToString(dr["CreatorImage"]),
+                                   SalesManImage = Convert.ToString(dr["SalesManImage"]),
+                                   CoordinatorImage = Convert.ToString(dr["CoordinatorImage"]),
+                                   DesignerImage = Convert.ToString(dr["DesignerImage"]),
+                                   LastActivity = Convert.ToDateTime(dr["LastActivity"]),
+                                   Company = Convert.ToString(dr["Company"]),
+                                   Stage = Convert.ToString(dr["Stage"]),
+                                   Total = Convert.ToString(dr["Total"]),
+                                   StageName = Convert.ToString(dr["StageName"]),
+                                   MileStone = Convert.ToString(dr["Milestone"])
+                               }).ToList();
+
+                var SubListout = new RecentInquiryClosureList
+                {
+                    ThisWeekClosureInquiry = (from r in Listdto where r.Week == "This Week" select r).ToArray(),
+                    NextWeekClosureInquiry = (from r in Listdto where r.Week == "Next Week" select r).ToArray()
+                };
+
+                return SubListout;
+            }
+        }
+        public async Task<RecentInquiryActivityList> GetDesignerRecentActivity(NullableIdDto input)
+        {
+            long userId = (int)AbpSession.UserId;
+            ConnectionAppService db = new ConnectionAppService();
+            DataTable dt = new DataTable();
+            using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+            {
+                SqlCommand sqlComm = new SqlCommand("Sp_DesignerRecentActivityInquiry", con);
+                sqlComm.Parameters.AddWithValue("@DesignerId", input.Id);
+                sqlComm.Parameters.AddWithValue("@UserId", userId);
+                sqlComm.CommandType = CommandType.StoredProcedure;
+                using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                {
+                    da.Fill(dt);
+                }
+
+                var Listdto = (from DataRow dr in dt.Rows
+                               select new RecentInquiryClosureDto
+                               {
+                                   Week = Convert.ToString(dr["Week"].ToString()),
+                                   ClosureDate = Convert.ToString(dr["ClosureDate"]),
+                                   SubMmissionId = Convert.ToString(dr["SubMmissionId"]),
+                                   InquiryName = Convert.ToString(dr["InquiryName"]),
+                                   InquiryId = Convert.ToInt32(dr["InquiryId"]),
+                                   Remarks = Convert.ToString(dr["Remarks"]),
+                                   CreatorImage = Convert.ToString(dr["CreatorImage"]),
+                                   SalesManImage = Convert.ToString(dr["SalesManImage"]),
+                                   CoordinatorImage = Convert.ToString(dr["CoordinatorImage"]),
+                                   DesignerImage = Convert.ToString(dr["DesignerImage"]),
+                                   LastActivity = Convert.ToDateTime(dr["LastActivity"]),
+                                   Company = Convert.ToString(dr["Company"]),
+                                   Stage = Convert.ToString(dr["Stage"]),
+                                   Total = Convert.ToString(dr["Total"]),
+                                   StageName = Convert.ToString(dr["StageName"]),
+                                   MileStone = Convert.ToString(dr["Milestone"])
+                               });
+
+                var SubListout = new RecentInquiryActivityList
+                {
+                    ThisWeekActivityInquiry = (from r in Listdto where r.Week == "This Week" select r).ToArray(),
+                    NextWeekActivityInquiry = (from r in Listdto where r.Week == "Next Week" select r).ToArray(),
+                    OverDueActivityInquiry = (from r in Listdto where r.Week == "Over Due" select r).ToArray()
+                };
+
+                return SubListout;
+            }
+        }
+        public async Task<Array> GetDesignerLostReasonGraph(GraphInput input)
+        {
+            long userId = (int)AbpSession.UserId;
+            ConnectionAppService db = new ConnectionAppService();
+            DataTable viewtable = new DataTable();
+            using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+            {
+                SqlCommand sqlComm = new SqlCommand("Sp_DesignerLostReasonGraph", con);
+                sqlComm.Parameters.AddWithValue("@DesignerId", input.UserId);
+                sqlComm.Parameters.AddWithValue("@UserId", userId);
+                sqlComm.Parameters.AddWithValue("@StartDate", input.StartDate);
+                sqlComm.Parameters.AddWithValue("@EndDate", input.EndDate);
+                sqlComm.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                {
+                    da.Fill(viewtable);
+                }
+                con.Close();
+                var data = (from DataRow dr in viewtable.Rows
+                            select new LostReasonGraphList
+                            {
+                                Reason = Convert.ToString(dr["Reason"]),
+                                Total = Convert.ToDecimal(dr["Total"]),
+                                Color = Convert.ToString(dr["Color"])
+                            });
+                return data.ToArray();
+            }
+        }
+        public async Task<Array> GetDesignerLeadSummaryGraph(GraphInput input)
+        {
+            long userId = (int)AbpSession.UserId;
+            ConnectionAppService db = new ConnectionAppService();
+            DataTable viewtable = new DataTable();
+            using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+            {
+                SqlCommand sqlComm = new SqlCommand("Sp_DesignerLeadSummaryGraph", con);
+                sqlComm.Parameters.AddWithValue("@DesignerId", input.UserId);
+                sqlComm.Parameters.AddWithValue("@UserId", userId);
+                sqlComm.Parameters.AddWithValue("@StartDate", input.StartDate);
+                sqlComm.Parameters.AddWithValue("@EndDate", input.EndDate);
+                sqlComm.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                {
+                    da.Fill(viewtable);
+                }
+                con.Close();
+                var data = (from DataRow dr in viewtable.Rows
+                            select new GetLeadSummaryGraphList
+                            {
+                                StageId = Convert.ToInt32(dr["EnqId"]),
+                                StageName = Convert.ToString(dr["EnqName"]),
+                                Total = Convert.ToDecimal(dr["Total"]),
+                                Color = Convert.ToString(dr["EnqColor"])
+                            });
+                return data.ToArray();
+            }
+        }
+
+        public async Task<GetRaindto> GetRainflowGraph(GraphInput input)
+        {
+            GetRaindto dts = new GetRaindto();
+            try
+            {
+                ConnectionAppService db = new ConnectionAppService();
+                DataTable viewtable = new DataTable();
+                using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+                {
+                    SqlCommand sqlComm = new SqlCommand("spGraph_QuotationRainflow_90", con);
+                    sqlComm.Parameters.AddWithValue("@UserId", input.UserId);
+                    sqlComm.Parameters.AddWithValue("@TeamId", input.TeamId);
+                    sqlComm.Parameters.AddWithValue("@StartDate", input.StartDate);
+                    sqlComm.Parameters.AddWithValue("@EndDate", input.EndDate);
+                    sqlComm.CommandType = CommandType.StoredProcedure;
+                    con.Open();
+                    using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                    {
+                        da.Fill(viewtable);
+                    }
+                    con.Close();
+                    var data = (from DataRow dr in viewtable.Rows
+                                select new GetLeadQuotationGraphListdto
+                                {
+                                    Id = Convert.ToInt32(dr["Id"]),
+                                    Total = Convert.ToDecimal(dr["Total"]),
+                                    Won = Convert.ToBoolean(dr["Won"]),
+                                    Submitted = Convert.ToBoolean(dr["Submitted"]),
+                                    Lost = Convert.ToBoolean(dr["Lost"]),
+                                    Stared = Convert.ToBoolean(dr["Stared"]),
+                                    TenderProject = Convert.ToBoolean(dr["TenderProject"]),
+                                    //SubmittedDate = Convert.ToDateTime(dr["SubmittedDate"]),
+                                    QuotationRefno = Convert.ToString(dr["QuotationRefno"]),
+                                    StatusId = Convert.ToInt32(dr["StatusId"]),
+                                    Weighted = Convert.ToDecimal(dr["W"])
+
+                                }).ToList();
+
+
+                    //Count
+                    dts.TotalCount = (from r in data where r.TenderProject != true select r).Count();
+                    dts.TenderCount = (from r in data where r.TenderProject == true select r).Count();
+
+                    dts.QTotalCount = (from r in data where r.TenderProject != true && r.StatusId > 1 select r).Count();
+                    dts.QTenderCount = (from r in data where r.TenderProject == true && r.StatusId > 1 select r).Count();
+
+                    dts.WTotalCount = (from r in data where r.TenderProject != true && r.Won == true select r).Count();
+                    dts.WTenderCount = (from r in data where r.TenderProject == true && r.Won == true select r).Count();
+
+                    dts.LTotalCount = (from r in data where r.TenderProject != true && r.Lost == true select r).Count();
+                    dts.LTenderCount = (from r in data where r.TenderProject == true && r.Lost == true select r).Count();
+
+                    dts.StrTotalCount = (from r in data where r.TenderProject != true && r.Stared == true select r).Count();
+                    dts.StrTenderCount = (from r in data where r.TenderProject == true && r.Stared == true select r).Count();
+
+                    dts.LiveTotalCount = (from r in data where r.TenderProject != true && r.StatusId > 1 && r.Won != true && r.Lost != true select r).Count();
+                    dts.LiveTenderCount = (from r in data where r.TenderProject == true && r.StatusId > 1 && r.Won != true && r.Lost != true select r).Count();
+
+                    //Total
+                    dts.Totalvalue = (from r in data where r.TenderProject != true select r.Total).Sum();
+                    dts.Tendervalue = (from r in data where r.TenderProject == true select r.Total).Sum();
+
+                    dts.QTotalvalue = (from r in data where r.TenderProject != true && r.StatusId > 1 select r.Total).Sum();
+                    dts.QTendervalue = (from r in data where r.TenderProject == true && r.StatusId > 1 select r.Total).Sum();
+
+                    dts.WTotalvalue = (from r in data where r.TenderProject != true && r.Won == true select r.Total).Sum();
+                    dts.WTendervalue = (from r in data where r.TenderProject == true && r.Won == true select r.Total).Sum();
+
+                    dts.LTotalvalue = (from r in data where r.TenderProject != true && r.Lost == true select r.Total).Sum();
+                    dts.LTendervalue = (from r in data where r.TenderProject == true && r.Lost == true select r.Total).Sum();
+
+                    dts.StrTotalvalue = (from r in data where r.TenderProject != true && r.Stared == true select (r.Total * r.Weighted/100)).Sum();
+                    dts.StrTendervalue = (from r in data where r.TenderProject == true && r.Stared == true select (r.Total * r.Weighted / 100)).Sum();
+
+                    dts.LiveTotalvalue = (from r in data where r.TenderProject != true && r.StatusId > 1 && r.Won != true && r.Lost != true select r.Total).Sum();
+                    dts.LiveTendervalue = (from r in data where r.TenderProject == true && r.StatusId > 1 && r.Won != true && r.Lost != true select r.Total).Sum();
+
+                    decimal? closedvalue = dts.WTotalvalue + dts.WTendervalue + dts.LTotalvalue + dts.LTendervalue;
+                    decimal? wonvalue = dts.WTotalvalue + dts.WTendervalue;
+                    dts.ConversionRate = 0;
+                    if (closedvalue > 0)
+                    {
+                        dts.ConversionRate = Math.Round((decimal)(wonvalue / closedvalue) * 100,1);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+
+            }
+
+            return dts;
+
+        }
+
 
     }
 }

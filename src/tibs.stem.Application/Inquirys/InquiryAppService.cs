@@ -777,8 +777,9 @@ namespace tibs.stem.Inquirys
                                Stared = a.Stared,
                                DesignerApproval = a.DesignerApproval,
                                RevisionApproval = a.RevisionApproval,
-                               Weightedvalue = a.Weightedvalue
-                               
+                               Weightedvalue = a.Weightedvalue,
+                               TenderProject = a.TenderProject,
+                               LCNumber = a.LCNumber
                            }).FirstOrDefault();
 
             if (inquiry != null)
@@ -4956,6 +4957,14 @@ namespace tibs.stem.Inquirys
 
             return new ListResultDto<NotificationListDto>(NewStatuss.MapTo<List<NotificationListDto>>());
         }
+        public async Task UpdateInquiryLCNumber(LCNumberInput input)
+        {
+            var inquiry = (from r in _inquiryRepository.GetAll() where r.Id == input.InquiryId select r).FirstOrDefault();
+            var inquiryNumber = inquiry.MapTo<Inquiry>();
+            inquiryNumber.LCNumber = input.LCNumber;
+            await _inquiryRepository.UpdateAsync(inquiryNumber);
+        }
+
     }
     public class monthdto
     {
@@ -4963,6 +4972,11 @@ namespace tibs.stem.Inquirys
         public string MonthName { get; set; }
         public int Year { get; set; }
         public int Id { get; set; }
+    }
+    public class LCNumberInput
+    {
+        public int InquiryId { get; set; }
+        public string LCNumber { get; set; }
     }
     public class SalesmanChange
     {

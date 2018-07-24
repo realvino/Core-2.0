@@ -2605,6 +2605,13 @@ namespace tibs.stem.Select2
         public string Email { get; set; }
         public string Phone { get; set; }
         public int TeamId { get; set; }
+
+        public decimal Conversionratio { get; set; }
+        public decimal TConversionratio { get; set; }
+
+        public int ConversionCount { get; set; }
+        public int TConversionCount { get; set; }
+
     }
     public class SelectDResult
     {

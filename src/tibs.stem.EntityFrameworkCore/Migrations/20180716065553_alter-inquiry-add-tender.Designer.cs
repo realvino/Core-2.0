@@ -14,9 +14,10 @@ using tibs.stem.MultiTenancy.Payments;
 namespace tibs.stem.Migrations
 {
     [DbContext(typeof(stemDbContext))]
-    partial class stemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180716065553_alter-inquiry-add-tender")]
+    partial class alterinquiryaddtender
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")
@@ -1960,8 +1961,6 @@ namespace tibs.stem.Migrations
                     b.Property<bool?>("Junk");
 
                     b.Property<DateTime?>("JunkDate");
-
-                    b.Property<string>("LCNumber");
 
                     b.Property<string>("LandlineNumber");
 

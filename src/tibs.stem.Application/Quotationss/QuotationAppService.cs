@@ -54,6 +54,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
 using tibs.stem.LeadReasons;
+using tibs.stem.Url;
 
 namespace tibs.stem.Quotationss
 {
@@ -93,6 +94,7 @@ namespace tibs.stem.Quotationss
         private readonly ITeamEnquiryReportExcelExporter _TeamEnquiryReportExcelExporter;
         private readonly ITeamReportExcelExporter _TeamReportExcelExporter;
         private readonly IAllTeamReportExcelExporter _AllTeamReportExcelExporter;
+        private readonly IWebUrlService _webUrlService;
         public static IConfigurationRoot Configuration { get; set; }
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IRepository<LeadReason> _leadReasonTrackRepository;
@@ -130,10 +132,12 @@ namespace tibs.stem.Quotationss
             ITeamEnquiryReportExcelExporter TeamEnquiryReportExcelExporter,
             ITeamReportExcelExporter TeamReportExcelExporter,
             IAllTeamReportExcelExporter AllTeamReportExcelExporter,
-            IRepository<LeadReason> leadReasonTrackRepository
+            IRepository<LeadReason> leadReasonTrackRepository,
+            IWebUrlService webUrlService
             )
         {
             _quotationRepository = quotationRepository;
+            _webUrlService = webUrlService;
             _LeadDetailRepository = LeadDetailRepository;
             _newCompanyRepository = newCompanyRepository;
             _quotationStatusRepository = quotationStatusRepository;
@@ -381,7 +385,8 @@ namespace tibs.stem.Quotationss
                                       PaymentDate = a.PaymentDate,
                                       DiscountEmail = a.DiscountEmail,
                                       LeadStatusId = 0,
-                                      LeadStatusName = ""
+                                      LeadStatusName = "",
+                                      LcNumber = a.Inquiry.LCNumber != null ? a.Inquiry.LCNumber : ""
                                   }).FirstOrDefault();
 
 
@@ -3156,7 +3161,6 @@ namespace tibs.stem.Quotationss
 
             string sheetName = "Preview";
             ISheet sheet = templateWorkbook.GetSheet(sheetName);
-
             var QuotationDetail = _quotationRepository.GetAll().Where(p => p.Id == input.Id);
             var Quotations = (from a in QuotationDetail
                               select new QuotationListDto
@@ -3179,7 +3183,6 @@ namespace tibs.stem.Quotationss
                                   RefQNo = a.RefQNo ?? "",
                                   Name = a.Name ?? "Quotation"
                               }).FirstOrDefault();
-
             ICell QuotationName = sheet.GetRow(5).GetCell(0);
             QuotationName.SetCellValue(Quotations.Name);
             ICell QuotationDate = sheet.GetRow(7).GetCell(1);
@@ -3297,7 +3300,7 @@ namespace tibs.stem.Quotationss
             }
             templateWorkbook.SetSheetName(0, "StandardPreview_" + input.Id + "");
             string newPathSource = _hostingEnvironment.WebRootPath + "\\Common\\Excel\\";
-            if (!Directory.Exists(newPathSource))
+             if (!Directory.Exists(newPathSource))
             {
                 Directory.CreateDirectory(newPathSource);
             }
@@ -3310,7 +3313,14 @@ namespace tibs.stem.Quotationss
             {
                 templateWorkbook.Write(fs);
             }
+            //string Source = _webUrlService.GetServerRootAddress() + @"/Common/Excel/"+ fileName;
+
+            //using (var client = new WebClient())
+            //{
+            //    client.DownloadFile(Source, fileName);
+            //}
         }
+       
         public async Task QuotationRevaluation(QuotationRevaluationInput input)
         {
             ConnectionAppService db = new ConnectionAppService();

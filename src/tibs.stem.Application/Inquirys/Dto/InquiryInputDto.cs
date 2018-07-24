@@ -83,5 +83,8 @@ namespace tibs.stem.Inquirys.Dto
         public virtual bool RevisionApproval { get; set; }
         public virtual bool Stared { get; set; }
         public virtual decimal Weightedvalue { get; set; }
+        public virtual bool TenderProject { get; set; }
+        public virtual string LCNumber { get; set; }
+
     }
 }

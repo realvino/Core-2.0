@@ -44,6 +44,7 @@ namespace tibs.stem.Authorization
             var dash = pages.CreateChildPermission(AppPermissions.Pages_Tenant_Dashboard, L("Dashboard"), multiTenancySides: MultiTenancySides.Tenant);
                 dash.CreateChildPermission(AppPermissions.Pages_Tenant_Dashboard_Marketing, L("MDashboard"));
                 dash.CreateChildPermission(AppPermissions.Pages_Tenant_Dashboard_Sales, L("SDashboard"));
+                dash.CreateChildPermission(AppPermissions.Pages_Tenant_Dashboard_Designer, L("DDashboard"));
 
             //Geography      
 

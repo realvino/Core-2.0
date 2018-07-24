@@ -343,7 +343,7 @@ namespace tibs.stem.Authorization.Users
         }
         public async Task LostEmailSendSalesManager(int Id, int? EnquiryId, string cidd, string ridd, string rrk, long? SalesPersonId, string EnquiryRefNo, string QuotationRefNo, string SalesPerson)
         {
-            var edq = _webUrlService.GetSiteRootAddress();
+            var edq = _webUrlService.GetServerRootAddress();
             var emailTemplate = new StringBuilder(_emailTemplateProvider.LostEmailTemplate());
             emailTemplate.Replace("{Competitor}", cidd);
             emailTemplate.Replace("{LostReason}", ridd);

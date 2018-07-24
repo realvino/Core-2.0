@@ -43,6 +43,13 @@ namespace tibs.stem.Web.Controllers
             byte[] fileBytes = System.IO.File.ReadAllBytes(webRootPath + fileName);
             return File(fileBytes, "application/x-msdownload", fileName);
         }
+        public FileResult DownloadExcel(int QuotationId)
+        {
+            string webRootPath = _hostingEnvironment.WebRootPath + "\\Common\\Excel\\";
+            string fileName = "StandardPreviewExcel_" + QuotationId + ".xlsx"; 
+            byte[] fileBytes = System.IO.File.ReadAllBytes(webRootPath + fileName);
+            return File(fileBytes, "application/x-msdownload", fileName);
+        }
         public FileResult DownloadEmp(int QuotationId)
         {
             string webRootPath = _hostingEnvironment.WebRootPath + "\\Common\\PDF\\PhotoEmphasisPDF\\";

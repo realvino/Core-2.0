@@ -965,7 +965,7 @@
     
     <text name="MDashboard" value="Marketing Dashboard" />
     <text name="SDashboard" value="Sales Dashboard" />
-
-
+    <text name="DDashboard" value="Designer Dashboard" />
+  
   </texts>
 </localizationDictionary>

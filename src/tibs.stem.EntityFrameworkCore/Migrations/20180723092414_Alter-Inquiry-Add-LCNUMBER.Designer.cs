@@ -14,9 +14,10 @@ using tibs.stem.MultiTenancy.Payments;
 namespace tibs.stem.Migrations
 {
     [DbContext(typeof(stemDbContext))]
-    partial class stemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180723092414_Alter-Inquiry-Add-LCNUMBER")]
+    partial class AlterInquiryAddLCNUMBER
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")

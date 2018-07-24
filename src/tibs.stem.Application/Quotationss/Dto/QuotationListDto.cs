@@ -76,5 +76,6 @@ namespace tibs.stem.Quotationss.Dto
         public string Stotal { get; set; }
         public int? LeadStatusId { get; set; }
         public string LeadStatusName { get; set; }
+        public virtual string LcNumber { get; set; }
     }
 }

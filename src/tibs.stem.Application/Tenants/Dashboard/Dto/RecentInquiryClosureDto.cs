@@ -13,18 +13,26 @@ namespace tibs.stem.Inquirys.Dto
     }
     public class RecentInquiryClosureList
     {
+        public RecentInquiryClosureDto[] ThisMonthClosureInquiry { get; set; }
         public RecentInquiryClosureDto[] ThisWeekClosureInquiry { get; set; }
         public RecentInquiryClosureDto[] NextWeekClosureInquiry { get; set; }
+        public string MonthValue { get; set; }
+        public string ThisweekValue { get; set; }
+        public string NextWeekValue { get; set; }
     }
     public class RecentInquiryActivityList
     {
         public RecentInquiryClosureDto[] ThisWeekActivityInquiry { get; set; }
         public RecentInquiryClosureDto[] NextWeekActivityInquiry { get; set; }
         public RecentInquiryClosureDto[] OverDueActivityInquiry { get; set; }
+        public string OverDueValue { get; set; }
+        public string ThisweekValue { get; set; }
+        public string NextWeekValue { get; set; }
     }
     public class RecentInquiryClosureDto
     { 
         public virtual string Week { get; set; }
+        public virtual string Month { get; set; }
         public virtual string ClosureDate { get; set; }
         public virtual string SubMmissionId { get; set; }
         public virtual string InquiryName { get; set; }
@@ -40,6 +48,7 @@ namespace tibs.stem.Inquirys.Dto
         public virtual string MileStone { get; set; }
         public virtual string Total { get; set; }
         public virtual string Stage { get; set; }
+        public decimal Value { get; set; }
 
     }
 
