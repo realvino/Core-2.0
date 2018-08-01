@@ -44,6 +44,10 @@ namespace tibs.stem.Quotationss.Dto
         public string Status { get; set; }
         public string WhyBafco { get; set; }
         public int QuotationId { get; set; }
-
+        public int SalesPersonId { get; set; }
+        public int CoordinatorId { get; set; }
+        public int DesignerId { get; set; }
+        public int SalesManagerId { get; set; }
+        public int CreatorUserId { get; set; }
     }
 }

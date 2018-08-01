@@ -781,7 +781,7 @@ namespace tibs.stem.Quotationss
                     input.PONumber = null;
                     input.MileStoneId = 10;
                     input.StageId = lostStage;
-                    await SendLostMail(input.Id, input.CompatitorId, input.ReasonId, input.ReasonRemark);
+                    //await SendLostMail(input.Id, input.CompatitorId, input.ReasonId, input.ReasonRemark);
                 }
                 else if (input.Lost == false)
                 {
@@ -1545,21 +1545,28 @@ namespace tibs.stem.Quotationss
             }
             ConnectionAppService db = new ConnectionAppService();
             DataTable ds = new DataTable();
-            using (SqlConnection con = new SqlConnection(db.ConnectionString()))
+            try
             {
-                SqlCommand sqlComm = new SqlCommand("Sp_QuotationRevision", con);
-                sqlComm.Parameters.AddWithValue("@QuotationId", input.Id);
-                sqlComm.Parameters.AddWithValue("@UserId", userid);
-                sqlComm.Parameters.AddWithValue("@NextActivity", input.NextActivity);
-                sqlComm.Parameters.AddWithValue("@type", input.TypeId);
-                sqlComm.Parameters.AddWithValue("@Approval", approve);
-                sqlComm.CommandType = CommandType.StoredProcedure;
-                using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                using (SqlConnection con = new SqlConnection(db.ConnectionString()))
                 {
-                    da.Fill(ds);
+                    SqlCommand sqlComm = new SqlCommand("Sp_QuotationRevision", con);
+                    sqlComm.Parameters.AddWithValue("@QuotationId", input.Id);
+                    sqlComm.Parameters.AddWithValue("@UserId", userid);
+                    sqlComm.Parameters.AddWithValue("@NextActivity", input.NextActivity);
+                    sqlComm.Parameters.AddWithValue("@type", input.TypeId);
+                    sqlComm.Parameters.AddWithValue("@Approval", approve);
+                    sqlComm.CommandType = CommandType.StoredProcedure;
+                    using (SqlDataAdapter da = new SqlDataAdapter(sqlComm))
+                    {
+                        da.Fill(ds);
+                    }
+                    var tquotationId = ds.Rows[0]["Id"].ToString();
+                    quotationId = int.Parse(tquotationId);
                 }
-                var tquotationId = ds.Rows[0]["Id"].ToString();
-                quotationId = int.Parse(tquotationId);
+            }
+            catch (Exception ex)
+            {
+
             }
             return quotationId;
         }
@@ -1808,6 +1815,11 @@ namespace tibs.stem.Quotationss
                                        Categories = Convert.ToString(dr["LeadType"]),
                                        Status = Convert.ToString(dr["Status"]),
                                        WhyBafco = Convert.ToString(dr["Whybafco"]),
+                                       CoordinatorId = Convert.ToInt32(dr["CoordinatorId"]),
+                                       SalesPersonId = Convert.ToInt32(dr["SalesId"]),
+                                       SalesManagerId = Convert.ToInt32(dr["ManagerId"]),
+                                       DesignerId = Convert.ToInt32(dr["DesignerId"]),
+                                       CreatorUserId = Convert.ToInt32(dr["CreatorUserId"]),
                                        QuotationId = Convert.ToInt32(dr["Qid"])
                                    });
 
@@ -1902,12 +1914,17 @@ namespace tibs.stem.Quotationss
                                 QuotationRefno = Convert.ToString(dr["QuotationRefno"]),
                                 QuotationTotal = Convert.ToDecimal(dr["QuotationTotal"]),
                                 StagePercent = Convert.ToDecimal(dr["StagePercent"]),
-                                EnqStage = Convert.ToString(dr["EnqStage"])
+                                EnqStage = Convert.ToString(dr["EnqStage"]),
+                                CreatorUserId = Convert.ToInt32(dr["CreatorUserId"]),
+                                SalesManagerId = Convert.ToInt32(dr["SalesManagerId"]),
+                                SalesPersonId = Convert.ToInt32(dr["SalesPersonId"]),
+                                CoordinatorId = Convert.ToInt32(dr["CoordinatorId"]),
+                                DesignerId = Convert.ToInt32(dr["DesignerId"]),
                             });
             try
             {
                 var inqwdet = (from r in query
-                               join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true && p.IsClosed != true) on r.InquiryId equals enq.Id
+                               join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true && p.IsClosed != true && p.IsClosed != true && p.MileStoneId > 3) on r.InquiryId equals enq.Id
                                select new QuotationReportListDto
                                {
                                    Date = r.CreationTime.ToString("dd-MMM-yy"),
@@ -1976,6 +1993,13 @@ namespace tibs.stem.Quotationss
                         item.AEDValue = data.QuotationTotal;
                         item.WeightedAED = Math.Round(data.StagePercent * data.QuotationTotal / 100, 2);
                         item.Stage = data.EnqStage;
+
+                        item.DesignerId = data.DesignerId;
+                        item.SalesPersonId = data.SalesPersonId;
+                        item.SalesManagerId = data.SalesManagerId;
+                        item.CreatorUserId = data.CreatorUserId;
+                        item.CoordinatorId = data.CoordinatorId;
+
                         item.Percentage = data.StagePercent;
 
                         var InquiryDetailClosureDate = item.ClosureDate;
@@ -2045,7 +2069,48 @@ namespace tibs.stem.Quotationss
         }
         public async Task<PagedResultDto<TeamReportListDto>> GetTeamReport(TeamReportInput input)
         {
-            var query = _TeamDetailRepository.GetAll().Where(p => p.TeamId == input.TeamId);
+            var query = (from r in _TeamDetailRepository.GetAll()
+                         join s in  _TeamRepository.GetAll() on r.TeamId equals s.Id
+                          where  r.TeamId == input.TeamId select new {
+
+                              SalesId = r.SalesmanId,
+                              ManagerId = s.SalesManagerId,
+                              SalesName = r.Salesman.UserName,
+                              TeamId = s.Id,
+                              TeamName = r.Team.Name
+                          }).ToList();
+
+            if(query.Count() > 0)
+            {
+                var manager = (from r in _TeamDetailRepository.GetAll()
+                             join s in _TeamRepository.GetAll() on r.TeamId equals s.Id
+                             where r.TeamId == input.TeamId
+                             select new
+                             {
+
+                                 SalesId = r.SalesmanId,
+                                 ManagerId = s.SalesManagerId,
+                                 SalesName = r.Salesman.UserName,
+                                 TeamId = s.Id,
+                                 TeamName = r.Team.Name
+                             }).FirstOrDefault();
+                if(manager != null)
+                {
+                    var userrole = (from c in UserManager.Users
+                                    join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                                    join role in _roleManager.Roles on urole.RoleId equals role.Id
+                                    where urole.UserId == manager.ManagerId
+                                    select role).FirstOrDefault();
+
+                    if (userrole.DisplayName == "Sales Manager / Sales Executive")
+                    {
+                        var user = await UserManager.GetUserByIdAsync((long)AbpSession.UserId);
+                        query.Add(new { SalesId = manager.ManagerId, ManagerId = (long)manager.ManagerId, SalesName = user.UserName, TeamId = (int)manager.TeamId, TeamName = manager.TeamName });
+                    }
+                }
+                
+            }
+           
 
             DateTime currentdate = DateTime.Now;
             var currentmonth = new DateTime(currentdate.Year, currentdate.Month, 1);
@@ -2084,11 +2149,11 @@ namespace tibs.stem.Quotationss
             var reg = (from r in query
                        select new TeamReportListDto
                        {
-                           TeamName = r.Team.Name ?? "",
-                           AccountManager = r.Salesman.UserName ?? "",
-                           AccountManagerId = r.SalesmanId,
+                           TeamName = r.TeamName ?? "",
+                           AccountManager = r.SalesName ?? "",
+                           AccountManagerId = r.SalesId,
                            TotalAEDValue = 0,
-                           TeamId = (int)(r.TeamId ?? 0),
+                           TeamId = r.TeamId,
                            TotalWeightedAED = 0,
                            Total1Value = 0,
                            Total2Value = 0,
@@ -2116,11 +2181,10 @@ namespace tibs.stem.Quotationss
                            Total12ValueFormat = listmonths[11].ToString("MMM-yyyy"),
                        });
 
-            var teamDetailCount = await reg.CountAsync();
+            var teamDetailCount = reg.Count();
 
-            var teamDetaillist = await reg
-                    .PageBy(input)
-                    .ToListAsync();
+            var teamDetaillist = reg
+                    .ToList();
 
             var TeamDetailListDtos = teamDetaillist.MapTo<List<TeamReportListDto>>();
             try
@@ -2129,7 +2193,7 @@ namespace tibs.stem.Quotationss
                 foreach (var salesman in TeamDetailListDtos)
                 {
                     var SalesmanId = (from u in UserManager.Users where u.UserName == salesman.AccountManager select u.Id).FirstOrDefault();
-                    var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.AssignedbyId == SalesmanId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true) on t.InquiryId equals enq.Id select t).ToArray();
+                    var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.AssignedbyId == SalesmanId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true && p.IsClosed != true && p.MileStoneId > 3) on t.InquiryId equals enq.Id select t).ToArray();
                     decimal salesmanaedvalue = 0;
                     decimal salesmanweightvalue = 0;
                     if (enqDetail.Length > 0)
@@ -2309,7 +2373,7 @@ namespace tibs.stem.Quotationss
             {
 
                 var TeamId = (from p in _TeamRepository.GetAll() where p.Name == team.TeamName select p.Id).FirstOrDefault();
-                var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.TeamId == TeamId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true &&  p.Junk != true) on t.InquiryId equals enq.Id select t).ToArray();
+                var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.TeamId == TeamId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true && p.IsClosed != true && p.MileStoneId > 3) on t.InquiryId equals enq.Id select t).ToArray();
                 decimal teamaedvalue = 0;
                 decimal teamweightvalue = 0;
                 if (enqDetail.Length > 0)
@@ -2522,7 +2586,7 @@ namespace tibs.stem.Quotationss
             try
             {
                 var inqwdet = (from r in query
-                               join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true && p.IsClosed != true) on r.InquiryId equals enq.Id
+                               join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true && p.IsClosed != true && p.MileStoneId > 3) on r.InquiryId equals enq.Id
                                select new QuotationReportListDto
                                {
                                    Date = r.CreationTime.ToString("dd-MMM-yy"),
@@ -2768,7 +2832,7 @@ namespace tibs.stem.Quotationss
                 foreach (var salesman in TeamDetailListDtos)
                 {
                     var SalesmanId = (from u in UserManager.Users where u.UserName == salesman.AccountManager select u.Id).FirstOrDefault();
-                    var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.AssignedbyId == SalesmanId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true) on t.InquiryId equals enq.Id select t).ToArray();
+                    var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.AssignedbyId == SalesmanId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true && p.IsClosed != true && p.MileStoneId > 3) on t.InquiryId equals enq.Id select t).ToArray();
                     decimal salesmanaedvalue = 0;
                     decimal salesmanweightvalue = 0;
                     if (enqDetail.Length > 0)
@@ -2966,7 +3030,7 @@ namespace tibs.stem.Quotationss
             {
 
                 var TeamId = (from p in _TeamRepository.GetAll() where p.Name == team.TeamName select p.Id).FirstOrDefault();
-                var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.TeamId == TeamId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true) on t.InquiryId equals enq.Id select t).ToArray();
+                var enqDetail = (from t in _enquiryDetailRepository.GetAll().Where(r => r.TeamId == TeamId && r.ClosureDate >= currentmonth && r.ClosureDate < currentyear) join enq in _inquiryRepository.GetAll().Where(p => p.Lost != true && p.Won != true && p.Junk != true && p.IsClosed != true && p.MileStoneId > 3) on t.InquiryId equals enq.Id select t).ToArray();
                 decimal teamaedvalue = 0;
                 decimal teamweightvalue = 0;
                 if (enqDetail.Length > 0)
@@ -3319,8 +3383,7 @@ namespace tibs.stem.Quotationss
             //{
             //    client.DownloadFile(Source, fileName);
             //}
-        }
-       
+        }    
         public async Task QuotationRevaluation(QuotationRevaluationInput input)
         {
             ConnectionAppService db = new ConnectionAppService();
@@ -3407,6 +3470,12 @@ namespace tibs.stem.Quotationss
         public decimal QuotationTotal { get; set; }
         public decimal StagePercent { get; set; }
         public string EnqStage { get; set; }
+        public int SalesPersonId { get; set; }
+        public int CoordinatorId { get; set; }
+        public int DesignerId { get; set; }
+        public int SalesManagerId { get; set; }
+        public int CreatorUserId { get; set; }
+
     }
     public class QuotationRevisionInput
     {

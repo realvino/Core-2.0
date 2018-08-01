@@ -354,9 +354,29 @@
         //Quotation
         public const string Pages_Tenant_Quotation_Quotation_Edit_QuotationDetails_EditQuotationProduct = "Pages.Tenant.Quotation.Quotation.Edit.QuotationDetails.EditQuotationProduct";
         public const string Pages_Tenant_Quotation_Quotation_Edit_QuotationDetails_DeleteQuotationProduct = "Pages.Tenant.Quotation.Quotation.Edit.QuotationDetails.DeleteQuotationProduct";
+        public const string Pages_Tenant_Quotation_Quotation_Designer_Revision_Request = "Pages.Tenant.Quotation.Revision.Request";
+
+        //Report
+        public const string Pages_Tenant_Report = "Pages.Tenant.Report";
+
+        public const string Pages_Tenant_Report_ViewEditor = "Pages.Tenant.Report.ViewEditor";
+        public const string Pages_Tenant_Report_ViewEditor_Edit = "Pages.Tenant.Report.ViewEditor.Edit";
+        public const string Pages_Tenant_Report_ViewEditor_Delete = "Pages.Tenant.Report.ViewEditor.Delete";
+
+        public const string Pages_Tenant_Report_ReportGenerator = "Pages.Tenant.Report.ReportGenerator";
+        public const string Pages_Tenant_Report_ReportGenerator_Create = "Pages.Tenant.Report.ReportGenerator.Create";
+
+        public const string Pages_Tenant_Report_Forecast = "Pages.Tenant.Report.Forecast";
+        public const string Pages_Tenant_Report_Forecast_Grid = "Pages.Tenant.Report.Forecast.Grid";
+        public const string Pages_Tenant_Report_Forecast_Kanban = "Pages.Tenant.Report.Forecast.Kanban";
+
+        public const string Pages_Tenant_Report_Forecast_Grid_Team = "Pages.Tenant.Report.Forecast.Grid.Team";
+        public const string Pages_Tenant_Report_Forecast_Grid_sales = "Pages.Tenant.Report.Forecast.Grid.Sales";
+        public const string Pages_Tenant_Report_Forecast_Kanban_Team = "Pages.Tenant.Report.Forecast.Kanban.Team";
+        public const string Pages_Tenant_Report_Forecast_Kanban_Sales = "Pages.Tenant.Report.Forecast.Kanban.Sales";
+
 
         //Enquiry
-
         public const string Pages_Tenant_Enquiry_Enquiry_Edit = "Pages.Tenant.Enquiry.Enquiry.Edit";
         public const string Pages_Tenant_Enquiry_Enquiry_Gridview_Create = "Pages.Tenant.Enquiry.Enquiry.Gridview.Create";
         public const string Pages_Tenant_Enquiry_Enquiry_Gridview_Edit = "Pages.Tenant.Enquiry.Enquiry.Gridview.Edit";

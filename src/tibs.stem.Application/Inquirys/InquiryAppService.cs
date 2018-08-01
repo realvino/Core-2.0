@@ -1775,7 +1775,6 @@ namespace tibs.stem.Inquirys
             }
 
         }
-
         public virtual async Task InquiryRevisionApproval(RevisionInput input)
         {
             long userid = (int)AbpSession.UserId;
@@ -1804,7 +1803,6 @@ namespace tibs.stem.Inquirys
                     }
             }
         }
-
         public async Task<Array> GetInquiryTickets(GetTicketInput input)
         {
             var SupportMileStones = (from r in _milestoneRepository.GetAll() where r.Id < 5 select r).ToArray();
@@ -2081,7 +2079,8 @@ namespace tibs.stem.Inquirys
                                     ContactId = Convert.ToInt32(dr["ContactId"]),
                                     Strike = Convert.ToBoolean(dr["Strike"]),
                                     Revision = Convert.ToString(dr["Revision"]),
-                                    Stared = Convert.ToBoolean(dr["Stared"])
+                                    Stared = Convert.ToBoolean(dr["Stared"]),
+                                    QuotationStatusId = Convert.ToInt32(dr["QuotationStatusId"])
                                 });
 
             var NewStatuss = NormalTicket;
@@ -3281,277 +3280,6 @@ namespace tibs.stem.Inquirys
         {
             await _jobActivityRepository.DeleteAsync(input.Id);
         }
-        //public async Task<Array> GetClosureDateInquiryTickets(GetClosureTicketInput input)
-        //{
-
-        //    int c = 1, mm = -2;
-        //    var Monthlist = new List<monthdto>();
-
-        //    if (input.ClosureDate != null)
-        //    {
-        //        DateTime givendt = DateTime.Parse(input.ClosureDate);
-        //        while (mm <= 3)
-        //        {
-        //            DateTime dt = givendt.AddMonths(mm);
-        //            Monthlist.Add(new monthdto { Id = c, MonthNo = dt.Month, MonthName = dt.ToString("MMM"), Year = dt.Year });
-        //            mm = mm + 1;
-        //            c = c + 1;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        DateTime today = DateTime.Now;
-        //        while (mm <= 3)
-        //        {
-        //            DateTime dt = today.AddMonths(mm);
-        //            Monthlist.Add(new monthdto { Id = c, MonthNo = dt.Month, MonthName = dt.ToString("MMM"), Year = dt.Year });
-        //            mm = mm + 1;
-        //            c = c + 1;
-        //        }
-        //    }
-
-
-        //    var SupportMonth = Monthlist.ToArray();
-
-
-        //    long userid = (int)AbpSession.UserId;
-        //    var userrole = (from a in UserManager.Users
-        //                    join urole in _userRoleRepository.GetAll() on a.Id equals urole.UserId
-        //                    join role in _roleManager.Roles on urole.RoleId equals role.Id
-        //                    where urole.UserId == userid
-        //                    select role).FirstOrDefault();
-
-
-        //    var query = (from enq in _inquiryRepository.GetAll()
-        //                 join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
-        //                 where enq.Junk != true && enqDetail.ClosureDate != null && enq.Archieved != true && enq.IsClosed != true
-        //                 select enqDetail);
-
-        //    if (userrole.DisplayName == "Sales Executive")
-        //    {
-        //        query = (from enq in _inquiryRepository.GetAll()
-        //                 join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
-        //                 join usr in UserManager.Users on enqDetail.AssignedbyId equals usr.Id
-        //                 where enq.Junk != true && enqDetail.ClosureDate != null && enq.Archieved != true && enq.IsClosed != true && enqDetail.AssignedbyId == userid
-        //                 select enqDetail
-        //                );
-        //    }
-        //    else if (userrole.DisplayName == "Sales Manager" || userrole.DisplayName == "Sales Manager / Sales Executive")
-        //    {
-        //        query = (from enq in _inquiryRepository.GetAll()
-        //                 join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
-        //                 join team in _TeamRepository.GetAll() on enqDetail.TeamId equals team.Id
-        //                 join usr in UserManager.Users on team.SalesManagerId equals usr.Id
-        //                 where enq.Junk != true && enqDetail.ClosureDate != null && enq.Archieved != true && enq.IsClosed != true && team.SalesManagerId == userid
-        //                 select enqDetail
-        //                );
-        //    }
-        //    else if (userrole.DisplayName == "Designer")
-        //    {
-        //        query = (from enq in _inquiryRepository.GetAll()
-        //                 join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
-        //                 join leadDetail in _LeadDetailRepository.GetAll() on enqDetail.InquiryId equals leadDetail.InquiryId
-        //                 where enq.Junk != true && enqDetail.ClosureDate != null && enq.Archieved != true && enq.IsClosed != true && leadDetail.DesignerId == userid
-        //                 select enqDetail
-        //                );
-        //    }
-        //    else if (userrole.DisplayName == "Sales Coordinator")
-        //    {
-        //        query = (from enq in _inquiryRepository.GetAll()
-        //                 join enqDetail in _enquiryDetailRepository.GetAll() on enq.Id equals enqDetail.InquiryId
-        //                 join leadDetail in _LeadDetailRepository.GetAll() on enqDetail.InquiryId equals leadDetail.InquiryId
-        //                 where enq.Junk != true && enqDetail.ClosureDate != null && enq.Archieved != true && enq.IsClosed != true && leadDetail.CoordinatorId == userid
-        //                 select enqDetail
-        //                );
-        //    }
-
-
-        //    query = query.WhereIf(
-        //        !input.Filter.IsNullOrEmpty(),
-        //         p =>
-        //              p.Inquirys.Name.Contains(input.Filter) ||
-        //              p.Inquirys.Designations.DesiginationName.Contains(input.Filter) ||
-        //              p.Inquirys.MileStones.MileStoneName.Contains(input.Filter) ||
-        //              p.Inquirys.Email.Contains(input.Filter) ||
-        //              p.Inquirys.Companys.Name.Contains(input.Filter) ||
-        //              p.Inquirys.CompanyName.Contains(input.Filter)
-        //        );
-
-        //    var NewStatuss = (from a in query
-        //                      select new InquiryClosureDateListDto
-        //                      {
-        //                          Id = a.Inquirys.Id,
-        //                          MileStoneId = a.Inquirys.MileStoneId,
-        //                          MileStoneName = a.Inquirys.MileStones.MileStoneName,
-        //                          CompanyName = a.Inquirys.CompanyName,
-        //                          DesignationName = a.Inquirys.DesignationName,
-        //                          Name = a.Inquirys.Name,
-        //                          Address = a.Inquirys.Address,
-        //                          WebSite = a.Inquirys.WebSite,
-        //                          Email = a.Inquirys.Email,
-        //                          MbNo = a.Inquirys.MbNo,
-        //                          Remarks = a.Inquirys.Remarks,
-        //                          SubMmissionId = a.Inquirys.SubMmissionId,
-        //                          IpAddress = a.Inquirys.IpAddress,
-        //                          Browcerinfo = a.Inquirys.Browcerinfo,
-        //                          CreatorUserId = a.Inquirys.LastModifierUserId != null ? (int)a.Inquirys.LastModifierUserId : (int)a.Inquirys.CreatorUserId,
-        //                          CreationTime = a.Inquirys.CreationTime,
-        //                          DepartmentId = 0,
-        //                          DepartmentName = "",
-        //                          StatusId = a.Inquirys.StatusId ?? 0,
-        //                          StatusColorCode = a.Inquirys.EnqStatus.EnqStatusColor,
-        //                          StatusName = a.Inquirys.EnqStatus.EnqStatusName ?? "",
-        //                          Percentage = (int)(a.Inquirys.EnqStatus.Percentage ?? 0),
-        //                          ClosureDate = (DateTime)a.ClosureDate
-        //                      }).ToList();
-
-        //    foreach (var d in NewStatuss)
-        //    {
-        //        try
-        //        {
-        //            var user = await UserManager.GetUserByIdAsync((long)d.CreatorUserId);
-
-        //            GetProfilePictureOutput dp = new GetProfilePictureOutput("");
-
-        //            if (user != null)
-        //            {
-        //                if (user.ProfilePictureId != null)
-        //                {
-        //                    //dp = await GetProfilePictureByIdInternal(user.ProfilePictureId.Value);
-        //                    d.ProfilePicture = "";
-        //                }
-
-        //                d.UserName = user.UserName;
-        //            }
-
-        //            var test = (from enqDetail in _enquiryDetailRepository.GetAll()
-        //                        where enqDetail.InquiryId == d.Id && enqDetail.ClosureDate != null
-        //                        select new enqDetailDt
-        //                        {
-        //                            CompanyId = enqDetail.CompanyId,
-        //                            DesignationId = enqDetail.DesignationId,
-        //                            CompanyName = enqDetail.CompanyId != null ? enqDetail.Companys.Name : d.CompanyName,
-        //                            DesignationName = enqDetail.DesignationId != null ? enqDetail.Designations.DesiginationName : d.DesignationName,
-        //                            DepartmentName = enqDetail.DepartmentId != null ? enqDetail.Departments.DepatmentName : "",
-        //                            DepartmentId = enqDetail.DepartmentId ?? 0,
-        //                            AssignedbyId = enqDetail.AssignedbyId ?? 0,
-        //                            AssignedTime = enqDetail.AssignedbyDate != null ? enqDetail.AssignedbyDate.ToString() : "",
-        //                            ContactId = enqDetail.ContactId ?? 0,
-        //                            TeamId = enqDetail.TeamId ?? 0,
-        //                            TeamName = enqDetail.TeamId != null ? enqDetail.Team.Name : "",
-        //                            SalesMan = enqDetail.AbpAccountManager.UserName ?? "",
-        //                            Estimationvalue = ((int)enqDetail.EstimationValue).ToString("N", new CultureInfo("en-US")).TrimEnd('0').TrimEnd('.'),
-        //                            ClosureDate = enqDetail.ClosureDate,
-        //                            LastActivity = enqDetail.LastActivity,
-        //                            IsExpire = false,
-        //                            Estimation = (int)enqDetail.EstimationValue  // 06.02.18
-        //                        }).FirstOrDefault();
-
-
-        //            d.EstimationValue = test.Estimation;   // 06.02.18
-        //            d.EstimationValueformat = test.Estimationvalue;
-        //            //d.ClosureDate = test.ClosureDate;
-        //            var date = DateTime.Now.AddDays(7);
-        //            if (date >= test.ClosureDate)
-        //            {
-        //                d.IsExpire = true;
-        //            }
-
-        //            d.ClosureDate = (DateTime)test.ClosureDate;
-        //            d.CompanyId = test.CompanyId;
-        //            d.DesignationId = test.DesignationId;
-        //            d.CompanyName = test.CompanyName;
-        //            d.DesignationName = test.DesignationName;
-        //            d.DepartmentName = test.DepartmentName;
-        //            d.DepartmentId = test.DepartmentId;
-        //            d.AssignedbyId = test.AssignedbyId;
-        //            d.AssignedTime = test.AssignedTime;
-        //            d.ContactId = test.ContactId;
-        //            d.TeamId = test.TeamId;
-        //            d.TeamName = test.TeamName;
-        //            d.EstimationValueformat = test.Estimationvalue;
-
-        //            // 21.02.18
-        //            if (test.AssignedbyId > 0)
-        //            {
-        //                byte[] bytes = new byte[0];
-        //                var Account = (from r in UserManager.Users where r.Id == (long)test.AssignedbyId select r).FirstOrDefault();
-        //                var profilePictureId = Account.ProfilePictureId;
-        //                d.SalesMan = Account.UserName;
-        //                d.AssignedbyImage = "/assets/common/images/default-profile-picture.png";
-        //                if (profilePictureId != null)
-        //                {
-        //                    var file = await _binaryObjectManager.GetOrNullAsync((Guid)profilePictureId);
-        //                    if (file != null)
-        //                    {
-        //                        bytes = file.Bytes;
-        //                        GetProfilePictureOutput img = new GetProfilePictureOutput(Convert.ToBase64String(bytes));
-        //                        d.AssignedbyImage = "data:image/jpeg;base64," + img.ProfilePicture;
-        //                    }
-        //                }
-        //            }
-        //            var leadDetail = _LeadDetailRepository.GetAll().Where(p => p.InquiryId == d.Id).FirstOrDefault();
-        //            if (leadDetail != null)
-        //            {
-        //                if (leadDetail.DesignerId > 0)
-        //                {
-
-        //                    byte[] bytes = new byte[0];
-        //                    var Account = (from s in UserManager.Users where s.Id == (long)leadDetail.DesignerId select s).FirstOrDefault();
-        //                    d.DesignerName = Account.UserName;
-        //                    var profilePictureId = Account.ProfilePictureId;
-        //                    d.DesignerImage = "/assets/common/images/default-profile-picture.png";
-        //                    if (profilePictureId != null)
-        //                    {
-        //                        var file = await _binaryObjectManager.GetOrNullAsync((Guid)profilePictureId);
-        //                        if (file != null)
-        //                        {
-        //                            bytes = file.Bytes;
-        //                            GetProfilePictureOutput img = new GetProfilePictureOutput(Convert.ToBase64String(bytes));
-        //                            d.DesignerImage = "data:image/jpeg;base64," + img.ProfilePicture;
-        //                        }
-        //                    }
-        //                }
-        //            }
-
-
-        //            var acttype = (from a in _acitivityTrackRepository.GetAll()
-        //                           where (a.EnquiryId == d.Id)
-        //                           group a by new { a.ActivityId, a.Activity.ActivityName, a.Activity.ColorCode }
-        //                           into b
-        //                           select new ActivityColor { ActivityId = b.Key.ActivityId, ActivityName = b.Key.ActivityName, ActivityColors = b.Key.ColorCode }).ToArray();
-        //            foreach (var de in acttype)
-        //            {
-        //                de.ActivityCount = (from a in _acitivityTrackRepository.GetAll() where (a.EnquiryId == d.Id && a.ActivityId == de.ActivityId) select a.Id).Count().ToString();
-        //            }
-        //            d.ActivityColors = acttype;
-        //        }
-        //        catch (Exception ex)
-        //        {
-
-        //        }
-        //    }
-
-
-        //    var SubListout = new List<ClosureDateInquiry>();
-
-        //    foreach (var newsts in SupportMonth)
-        //    {
-        //        // var queryClosuredt = (from r in NewStatuss where r.ClosureDate != null &&  r.ClosureDate.Month == newsts.MonthNo && r.ClosureDate.Year == newsts.Year select r).FirstOrDefault();
-        //        var TotValue = (from r in NewStatuss where r.ClosureDate != null && r.ClosureDate.Month == newsts.MonthNo && r.ClosureDate.Year == newsts.Year select r).Sum(p => p.EstimationValue);
-        //        SubListout.Add(new ClosureDateInquiry
-        //        {
-        //            Id = newsts.Id,
-        //            MonthName = newsts.MonthName + " " + newsts.Year.ToString(),
-        //            TotalValueformat = TotValue.ToString("N", new CultureInfo("en-US")).TrimEnd('0').TrimEnd('.'),
-        //            CurrentDate = new DateTime(newsts.Year, newsts.MonthNo, 1),   //(DateTime)queryClosuredt.ClosureDate,                   
-        //            GetTicketReservation = (from r in NewStatuss where r.ClosureDate != null && r.ClosureDate.Month == newsts.MonthNo && r.ClosureDate.Year == newsts.Year select r).OrderByDescending(p => p.ClosureDate).ToArray(),
-        //        });
-        //    }
-
-        //    return SubListout.ToArray();
-
-        //}
         public async Task<PagedResultDto<JobActivityList>> GetOverallJobActivity(GetoverallJobActivityInput input)
         {
             long userid = (int)AbpSession.UserId;
@@ -4707,25 +4435,26 @@ namespace tibs.stem.Inquirys
         }
         public async Task<Array> GetClosureDateInquiryTickets(GetClosureTicketInput input)
         {
-
-            int c = 1, mm = -2;
+            int c = 1, mm = -5;
             var Monthlist = new List<monthdto>();
 
             if (input.ClosureDate != null)
             {
                 DateTime givendt = DateTime.Parse(input.ClosureDate);
-                while (mm <= 3)
+                while (mm <= 6)
                 {
                     DateTime dt = givendt.AddMonths(mm);
                     Monthlist.Add(new monthdto { Id = c, MonthNo = dt.Month, MonthName = dt.ToString("MMM"), Year = dt.Year });
                     mm = mm + 1;
                     c = c + 1;
                 }
+
             }
             else
             {
                 DateTime today = DateTime.Now;
-                while (mm <= 3)
+                mm = 0;
+                while (mm <= 11)
                 {
                     DateTime dt = today.AddMonths(mm);
                     Monthlist.Add(new monthdto { Id = c, MonthNo = dt.Month, MonthName = dt.ToString("MMM"), Year = dt.Year });
@@ -4736,35 +4465,63 @@ namespace tibs.stem.Inquirys
 
             var SupportMonth = Monthlist.ToArray();
 
-            long userid = (int)AbpSession.UserId;
-            var userrole = (from a in UserManager.Users
-                            join urole in _userRoleRepository.GetAll() on a.Id equals urole.UserId
-                            join role in _roleManager.Roles on urole.RoleId equals role.Id
-                            where urole.UserId == userid
-                            select role).FirstOrDefault();
+            //long userid = (int)AbpSession.UserId;
+            //var userrole = (from a in UserManager.Users
+            //                join urole in _userRoleRepository.GetAll() on a.Id equals urole.UserId
+            //                join role in _roleManager.Roles on urole.RoleId equals role.Id
+            //                where urole.UserId == userid
+            //                select role).FirstOrDefault();
 
-            string viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry]";
+            string viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where Id > 0 ";
 
-            if (userrole.DisplayName == "Sales Executive")
+            if (input.SalesId > 0)
             {
-                viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where AssignedbyId = " + userid;
-            }
-            else if (userrole.DisplayName == "Sales Manager" || userrole.DisplayName == "Sales Manager / Sales Executive")
+                viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where SalespersonId = " + input.SalesId;
+            } else if (input.TeamId > 0)
             {
-                viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where SalesManagerId = " + userid;
+                viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where SalesManagerId = " + input.TeamId;
             }
-            else if (userrole.DisplayName == "Designer")
+
+            
+
+            if (input.To > 0 && input.From > 0 && input.TypeId == 4)
             {
-                viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where DesignerId = " + userid;
+                viewquery =  viewquery + " and EnqTotalValue  between "+ input.From + " and "+ input.To+ " ";
             }
-            else if (userrole.DisplayName == "Sales Coordinator")
+            else if (input.From > 0 && input.TypeId == 1)
             {
-                viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where CoordinatorId = " + userid;
+                viewquery = viewquery + " and EnqTotalValue >= " + input.From;
             }
-            else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            else if (input.From > 0 && input.TypeId == 2)
             {
-                viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where AssignedbyId = " + userid + "or CoordinatorId = " + userid;
+                viewquery = viewquery + " and EnqTotalValue <= " + input.From;
             }
+            else if (input.From > 0 && input.TypeId == 3)
+            {
+                viewquery = viewquery + " and EnqTotalValue = " + input.From;
+            }
+
+
+            //if (userrole.DisplayName == "Sales Executive")
+            //{
+            //    viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where SalespersonId = " + userid;
+            //}
+            //else if (userrole.DisplayName == "Sales Manager" || userrole.DisplayName == "Sales Manager / Sales Executive")
+            //{
+            //    viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where SalesManagerId = " + userid;
+            //}
+            //else if (userrole.DisplayName == "Designer")
+            //{
+            //    viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where DesignerId = " + userid;
+            //}
+            //else if (userrole.DisplayName == "Sales Coordinator")
+            //{
+            //    viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where CoordinatorId = " + userid;
+            //}
+            //else if (userrole.DisplayName == "Sales Coordinator / Sales Executive")
+            //{
+            //    viewquery = "SELECT * FROM [dbo].[View_ForecastInquiry] where SalespersonId = " + userid + "or CoordinatorId = " + userid;
+            //}
 
             ConnectionAppService db = new ConnectionAppService();
             DataTable dr = new DataTable();
@@ -4800,44 +4557,63 @@ namespace tibs.stem.Inquirys
                                   SubMmissionId = Convert.ToString(a["SubMmissionId"]),
                                   IpAddress = Convert.ToString(a["IpAddress"]),
                                   Browcerinfo = Convert.ToString(a["Browcerinfo"]),
-                                  CreatorUserId = Convert.ToInt32(a["CreatorUserId"]),
-                                  UserName = Convert.ToString(a["UserName"]),
-                                  CreationTime = Convert.ToDateTime(a["CreationTime"]),
+                                  //CreationTime = Convert.ToDateTime(a["CreationTime"]),
                                   DepartmentId = Convert.ToInt32(a["DepartmentId"]),
                                   DepartmentName = Convert.ToString(a["DepartmentName"]),
-                                  StatusId = Convert.ToInt32(a["StatusId"]),
-                                  StatusColorCode = Convert.ToString(a["StatusColorCode"]),
-                                  StatusName = Convert.ToString(a["StatusName"]),
-                                  Percentage = Convert.ToInt32(a["Percentage"]),
+                                  EnqStageId = Convert.ToInt32(a["EnqStageId"]),
+                                  EnqStageColor = Convert.ToString(a["EnqStageColor"]),
+                                  EnqStageName = Convert.ToString(a["EnqStageName"]),
+                                  StagePercent = Convert.ToInt32(a["StagePercent"]),
+                                  //LastActivity = Convert.ToDateTime(a["LastActivity"]),
                                   ClosureDate = Convert.ToDateTime(a["ClosureDate"]),
-                                  EstimationValue = Convert.ToInt32(a["EstimationValue"]),
-                                  EstimationValueformat = Convert.ToString(a["EstimationValueformat"]),
+                                  EnqTotalValue = Convert.ToDecimal(a["EnqTotalValue"]),
+                                  EnqWeightValue = Convert.ToDecimal(a["EnqWeightValue"]),
                                   IsExpire = Convert.ToBoolean(a["IsExpire"]),
                                   CompanyId = Convert.ToInt32(a["CompanyId"]),
                                   DesignationId = Convert.ToInt32(a["DesignationId"]),
-                                  AssignedbyId = Convert.ToInt32(a["AssignedbyId"]),
-                                  AssignedTime = Convert.ToString(a["AssignedbyDate"]),
+                                  CreatorUserId = Convert.ToInt32(a["CreatorUserId"]),
                                   ContactId = Convert.ToInt32(a["ContactId"]),
                                   TeamId = Convert.ToInt32(a["TeamId"]),
-                                  TeamName = Convert.ToString(a["Team"]),
-                                  SalesMan = Convert.ToString(a["Salesman"]),
-                                  AssignedbyImage = Convert.ToString(a["AssignedbyImage"]),
-                                  DesignerName = Convert.ToString(a["Designer"]),
+                                  Team = Convert.ToString(a["Team"]),
+                                  SalesPersonId = Convert.ToInt32(a["SalesPersonId"]),
+                                  SalesManagerId = Convert.ToInt32(a["SalesManagerId"]),
+                                  SalesPerson = Convert.ToString(a["SalesPerson"]),
+                                  SalesPersonImage = Convert.ToString(a["SalesPersonImage"]),
+                                  DesignerId = Convert.ToInt32(a["DesignerId"]),
+                                  Designer = Convert.ToString(a["Designer"]),
+                                  CoordinatorId = Convert.ToInt32(a["CoordinatorId"]),
                                   DesignerImage = Convert.ToString(a["DesignerImage"]),
-                                  CoordinatorName = Convert.ToString(a["CoordinatorName"]),
+                                  Coordinator = Convert.ToString(a["Coordinator"]),
                                   CoordinatorImage = Convert.ToString(a["CoordinatorImage"]),
-                                  Revision = Convert.ToString(a["Revision"])
+                                  Revision = Convert.ToString(a["Revision"]),
+                                  SCreationTime = Convert.ToString(a["CreationTime"]),
+                                  Starred = Convert.ToInt32(a["Starred"]),
+                                  Weightedvalue = Convert.ToDecimal(a["Weightedvalue"]),
+                                  Tender = Convert.ToInt32(a["Tender"]),
+                                  Quotationshtml = Convert.ToString(a["Quotationshtml"])
+
                               });
 
             NewStatuss = NewStatuss.WhereIf(
-                        !input.Filter.IsNullOrEmpty(),
-                        p =>
-                           p.Name.Contains(input.Filter) ||
-                           p.DesignationName.Contains(input.Filter) ||
-                           p.MileStoneName.Contains(input.Filter) ||
-                           p.Email.Contains(input.Filter) ||
-                           p.CompanyName.Contains(input.Filter)
-                       );
+                       !input.Filter.IsNullOrEmpty(),
+                       p =>
+                          p.Name.Contains(input.Filter) ||
+                          p.DesignationName.Contains(input.Filter) ||
+                          p.MileStoneName.Contains(input.Filter) ||
+                          p.Email.Contains(input.Filter) ||
+                          p.CompanyName.Contains(input.Filter)
+                      );
+
+            int i = 0;
+            var datas = NewStatuss.ToList();
+            foreach (var r in datas)
+            {
+                datas[i].Amount = r.EnqTotalValue.ToString("N", new CultureInfo("en-US"));
+                datas[i].WeigntedAmount = r.EnqWeightValue.ToString("N", new CultureInfo("en-US"));
+                i++;
+            }
+
+           
 
             var SubListout = new List<ClosureDateInquiry>();
 
@@ -4845,14 +4621,16 @@ namespace tibs.stem.Inquirys
             {
                 try
                 {
-                    var TotValue = (from r in NewStatuss where r.ClosureDate != null && r.ClosureDate.Month == newsts.MonthNo && r.ClosureDate.Year == newsts.Year select r).Sum(p => p.EstimationValue);
+                    var TotValue = (from r in datas where r.ClosureDate != null && r.ClosureDate.Month == newsts.MonthNo && r.ClosureDate.Year == newsts.Year select r).Sum(p => p.EnqTotalValue);
+                    var weightvalue = (from r in datas where r.ClosureDate != null && r.ClosureDate.Month == newsts.MonthNo && r.ClosureDate.Year == newsts.Year select r).Sum(p => p.EnqWeightValue);
                     SubListout.Add(new ClosureDateInquiry
                     {
                         Id = newsts.Id,
                         MonthName = newsts.MonthName + " " + newsts.Year.ToString(),
-                        TotalValueformat = TotValue.ToString("N", new CultureInfo("en-US")).TrimEnd('0').TrimEnd('.'),
+                        TotalValueformat = TotValue.ToString("N", new CultureInfo("en-US")),
+                        WeightValueformat = weightvalue.ToString("N", new CultureInfo("en-US")),
                         CurrentDate = new DateTime(newsts.Year, newsts.MonthNo, 1),   //(DateTime)queryClosuredt.ClosureDate,                   
-                        GetTicketReservation = (from r in NewStatuss where r.ClosureDate != null && r.ClosureDate.Month == newsts.MonthNo && r.ClosureDate.Year == newsts.Year select r).OrderByDescending(p => p.ClosureDate).ToArray(),
+                        GetTicketReservation = (from r in datas where r.ClosureDate != null && r.ClosureDate.Month == newsts.MonthNo && r.ClosureDate.Year == newsts.Year select r).OrderByDescending(p => p.ClosureDate).ToArray(),
                     });
                 }
                 catch (Exception ty)

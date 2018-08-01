@@ -2040,6 +2040,81 @@ namespace tibs.stem.Select2
             
             return sr;
         }
+
+        public async Task<Select3UserResult> GetTeamUserProfile(NullableIdDto input)
+        {
+            List<userprofiledto> UserDto = new List<userprofiledto>();
+
+            Select3UserResult sr = new Select3UserResult();
+            long userid = (int)input.Id;
+            var userrole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userid
+                            select role).FirstOrDefault();
+
+            var query = (from U in UserManager.Users
+                         where U.Id == 0
+                         select new userprofiledto
+                         {
+                         });
+
+            if (input.Id > 0)
+            {
+                query = (from U in UserManager.Users
+                         join TD in _TeamDetailRepository.GetAll() on U.Id equals TD.SalesmanId
+                         join T in _TeamRepository.GetAll() on TD.TeamId equals T.Id
+                         join R in _userRoleRepository.GetAll() on TD.SalesmanId equals R.UserId
+                         where T.SalesManagerId == userid
+                         select new userprofiledto
+                         {
+                             Id = U.Id,
+                             Name = U.UserName,
+                             ProfilePictureId = U.ProfilePictureUrl
+                         });
+                UserDto = query.ToList();
+                
+            if (userrole.DisplayName == "Sales Manager / Sales Executive")
+            {
+                var user = await UserManager.GetUserByIdAsync((long)input.Id);
+                UserDto.Add(new userprofiledto { Id = user.Id, Name = user.UserName, ProfilePictureId = user.ProfilePictureUrl });
+            }
+            }
+            else
+            {
+                query = (from U in UserManager.Users
+                         join TD in _TeamDetailRepository.GetAll() on U.Id equals TD.SalesmanId
+                         join role in _userRoleRepository.GetAll() on TD.SalesmanId equals role.UserId
+                         where role.RoleId == 4 || role.RoleId == 17
+                         select new userprofiledto
+                         {
+                             Id = U.Id,
+                             Name = U.UserName,
+                             ProfilePictureId = U.ProfilePictureUrl
+                         });
+                UserDto = query.ToList();
+                query = (from U in UserManager.Users
+                         join T in _TeamRepository.GetAll() on U.Id equals T.SalesManagerId
+                         join R in _userRoleRepository.GetAll() on T.SalesManagerId equals R.UserId
+                         where R.RoleId == 10
+                         select new userprofiledto
+                         {
+                             Id = U.Id,
+                             Name = U.UserName,
+                             ProfilePictureId = U.ProfilePictureUrl
+                         });
+                var datas = query.ToList();
+                foreach (var d in datas)
+                {
+                    UserDto.Add(new userprofiledto { Id = d.Id, Name = d.Name, ProfilePictureId = d.ProfilePictureId });
+                }
+
+            }
+
+            sr.select3data = UserDto.ToArray();
+
+            return sr;
+        }
         public async Task<Select3UserResult> GetUserSalesManager()
         {
             var UserDto = new List<userprofiledto>();
@@ -2185,13 +2260,23 @@ namespace tibs.stem.Select2
         {
             SelectDResult sr = new SelectDResult();
             var team = (from r in _TeamRepository.GetAll() select r).ToArray();
-            if (team.Length > 0)
-            {
-                var teamlist = (from r in team join e in UserManager.Users on r.SalesManagerId equals e.Id select new datadtoes { Id = r.Id, Name = e.FullName + " " + "(" + r.Name + ")", Photo = _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + e.ProfilePictureUrl }).ToList();
-                teamlist.Add(new datadtoes { Id = 1000, Name = "All", Photo = _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + "/Common/Profile/default-profile-picture.png" });
-                sr.selectDdata = teamlist.ToArray();
 
-            }
+                team = (from r in _TeamRepository.GetAll() select r).ToArray();
+                if (team.Length > 0)
+                {
+                    var teamlist = (from r in team
+                                    join e in UserManager.Users on r.SalesManagerId equals e.Id
+                                    select new datadtoes
+                                    {
+                                        Id = r.Id,
+                                        Name = e.FullName + " " + "(" + r.Name + ")",
+                                        Photo = _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + e.ProfilePictureUrl,
+                                        IsSales = false,
+                                        UserId = e.Id
+                                    }).ToList();
+                    sr.selectDdata = teamlist.ToArray();
+                }
+      
             return sr;
         }
         public async Task<Select3Result> GetDesigners()
@@ -2340,7 +2425,59 @@ namespace tibs.stem.Select2
 
             return sr;
         }
+        public async Task<SalesPersonTeamDto> GetSalesPersonTeam()
+        {
+            long userId = (int)AbpSession.UserId;
+            var userRole = (from c in UserManager.Users
+                            join urole in _userRoleRepository.GetAll() on c.Id equals urole.UserId
+                            join role in _roleManager.Roles on urole.RoleId equals role.Id
+                            where urole.UserId == userId
+                            select role).FirstOrDefault();
 
+            SalesPersonTeamDto sr = new SalesPersonTeamDto();
+
+            if (userRole.DisplayName == "Sales Executive")
+            {
+                var Account = (from c in UserManager.Users where c.Id == userId select c).FirstOrDefault();
+                sr.SalesPerson = new datadtos { Id = Account.Id, Name = Account.UserName };
+
+                var Team = (from U in UserManager.Users
+                            join TD in _TeamDetailRepository.GetAll() on U.Id equals TD.SalesmanId
+                            join T in _TeamRepository.GetAll() on TD.TeamId equals T.Id
+                            where TD.SalesmanId == userId
+                            select T).FirstOrDefault();
+
+                var Accounts = (from c in UserManager.Users where c.Id == Team.SalesManagerId select c).FirstOrDefault();
+
+                sr.SalesManagerTeam = new Select2salesDto { Id = Team.Id, Name = Team.Name, SalesManId = Team.SalesManagerId, SalesMan = Accounts.UserName };
+            }
+            else if (userRole.DisplayName == "Sales Manager")
+            {
+                var Account = (from c in UserManager.Users where c.Id == userId select c).FirstOrDefault();
+                var Team = (from T in _TeamRepository.GetAll()
+                            where T.SalesManagerId == userId
+                            select T).FirstOrDefault();
+                sr.SalesManagerTeam = new Select2salesDto { Id = Team.Id, Name = Team.Name, SalesManId = Account.Id, SalesMan = Account.UserName };
+            }
+            else if (userRole.DisplayName == "Sales Manager / Sales Executive")
+            {
+                var Account = (from c in UserManager.Users where c.Id == userId select c).FirstOrDefault();
+                sr.SalesPerson = new datadtos { Id = Account.Id, Name = Account.UserName };
+
+                var Team = (from T in _TeamRepository.GetAll()
+                            where T.SalesManagerId == userId
+                            select T).FirstOrDefault();
+
+                sr.SalesManagerTeam = new Select2salesDto { Id = Team.Id, Name = Team.Name, SalesManId = Team.SalesManagerId, SalesMan = Account.UserName };
+            }
+            return sr;
+        }
+
+    }
+    public class SalesPersonTeamDto
+    {
+        public Select2salesDto SalesManagerTeam { get; set; }
+        public datadtos SalesPerson { get; set; }
     }
     public class categorydto
     {
@@ -2609,8 +2746,8 @@ namespace tibs.stem.Select2
         public decimal Conversionratio { get; set; }
         public decimal TConversionratio { get; set; }
 
-        public int ConversionCount { get; set; }
-        public int TConversionCount { get; set; }
+        public decimal ConversionCount { get; set; }
+        public decimal TConversionCount { get; set; }
 
     }
     public class SelectDResult
@@ -2623,5 +2760,6 @@ namespace tibs.stem.Select2
         public string Name { get; set; }
         public string Photo { get; set; }
         public bool IsSales { get; set; }
+        public long UserId { get; set; }
     }
 }

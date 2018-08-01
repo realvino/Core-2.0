@@ -17,7 +17,7 @@ namespace tibs.stem.Tenants.Dashboard.Dto
         public int Id { get; set; }
         public string Name { get; set; }
         public int Counts { get; set; }
-        public int Total { get; set; }
+        public decimal Total { get; set; }
         public string SourceName { get; set; }
     }
     public class SalesLeads

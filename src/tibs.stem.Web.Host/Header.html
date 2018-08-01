@@ -1,4 +1,4 @@
-﻿<div style="padding-bottom:44px;margin-left:8px;margin-right:8px;">
+﻿<div style="padding-bottom:50px;margin-left:8px;margin-right:8px;">
     <div style="text-align:left;width: 300px;padding-bottom: 20px;margin-left: -20px">
         <img src="{logourl}" style="height:70px;max-width:273px;" />
     </div>
@@ -10,7 +10,7 @@
         <p>Tel.(971 2) 631-7008  |  Fax (971 2) 631-5009</p>
         <p>hello@bafco.com  |  www.bafco.com</p>
     </div>
-    <div>
+    <div style="margin-bottom: -10px;">
         <h2 style="text-align: center;font-family:Calibri;border: 3px dotted darkgray;border-right: none;border-left: none; width: 100%;color: #b9b7b7;font-weight: 700;">{Title}</h2>
     </div>
     <div style="float:left;width: 50%;color:#000;font-family:Calibri;">
@@ -40,6 +40,10 @@
                 <td style="text-align:left;border: 0px solid transparent;">&nbsp; &nbsp;{TRN}</td>
             </tr>
             <tr>
+                <td style="text-align:left;border: 0px solid transparent;color: #949494;">LC No</td>
+                <td style="text-align:left;border: 0px solid transparent;">&nbsp; &nbsp;{LcNumber}</td>
+            </tr>
+            <tr>
                 <td style="text-align:left;border: 0px solid transparent;color: #949494;">Email</td>
                 <td style="text-align:left;border: 0px solid transparent;">&nbsp; &nbsp;{Email}</td>
             </tr>
@@ -66,30 +70,34 @@
         </p>
     </div>
     <div style="width:100%;float:left;">
-        <table id="t01" style="page-break-after:auto;font-family:Calibri;color:#000;" class="vendorprint">
-            <tr style="text-align:center;">
-                <th style="width:5%">Sl/No</th>
-                <th style="width:45%">Description</th>
-                <th style="width:8%">Qty.</th>
-                <th style="width:8%">UOM</th>
-                <th style="width:10%">Unit Price</th>
-                <th style="width:12%;color: #ce4646;">Net Price Discounted</th>
-                <th style="width:12%">Amount (AED)</th>
-            </tr>
-        </table>
+        <p style="text-align:right;color:red;font-size: 14px;font-weight: 600;font-family:Calibri;margin-top: -15px;margin-bottom: 0px;">
+            Pictures are for illustration purposes only, subject to Finishes Approval Form.
+        </p>
+        <div style="width:100%;float:left;">
+            <table id="t01" style="page-break-after:auto;font-family:Calibri;color:#000;" class="vendorprint">
+                <tr style="text-align:center;">
+                    <th style="width:5%">Sl/No</th>
+                    <th style="width:45%">Description</th>
+                    <th style="width:8%">Qty.</th>
+                    <th style="width:8%">UOM</th>
+                    <th style="width:10%">Unit Price</th>
+                    <th style="width:12%;color: #ce4646;">Net Price Discounted</th>
+                    <th style="width:12%">Amount (AED)</th>
+                </tr>
+            </table>
+        </div>
+
     </div>
 
-</div>
+    <style>
+        table#t01 th {
+            /*background-color: #0e2563;*/
+            background-color: #bfbfbf;
+            font-size: 14px;
+        }
 
-<style>
-    table#t01 th {
-        /*background-color: #0e2563;*/
-        background-color: #bfbfbf;
-        font-size: 14px;
-    }
-
-    table, th, td {
-        border: 2px solid #d9d9d9;
-        border-collapse: collapse;
-    }
-</style>
+        table, th, td {
+            border: 2px solid #d9d9d9;
+            border-collapse: collapse;
+        }
+    </style>

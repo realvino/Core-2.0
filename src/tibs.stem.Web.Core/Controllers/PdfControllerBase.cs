@@ -114,6 +114,7 @@ namespace tibs.stem.Web.Controllers
                 header = header.Replace("{Client}", company.Name);
                 header = header.Replace("{CustomerID}", company.CustomerId);
                 header = header.Replace("{TRN}", company.TRNnumber);
+                header = header.Replace("{LcNumber}", Inquiryy.LCNumber ?? "");
                 header = header.Replace("{Title}", quotation.Name ?? "Quotation");
             }
             if (quotation.RFQNo != null && quotation.RFQNo != "")
@@ -174,7 +175,7 @@ namespace tibs.stem.Web.Controllers
                 body = body.Replace("{Client}", company.Name);
                 body = body.Replace("{CustomerID}", company.CustomerId);
                 body = body.Replace("{TRN}", company.TRNnumber);
-
+                body = body.Replace("{LcNumber}", Inquiryy.LCNumber ?? "");
             }
             if (quotation.AttentionContactId != null)
             {
@@ -218,16 +219,16 @@ namespace tibs.stem.Web.Controllers
                 totalgross = totalgross + dat.OverAllPrice;
             }
 
-            if (quotation.CreatorUserId != null)
+            if (quotation.SalesPersonId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.SalesPersonId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");
             }
-            else if (quotation.LastModifierUserId != null)
+            else if (quotation.CreatorUserId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.LastModifierUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");
@@ -499,16 +500,16 @@ namespace tibs.stem.Web.Controllers
 
                 totalgross = totalgross + dat.OverAllPrice;
             }
-            if (quotation.CreatorUserId != null)
+            if (quotation.SalesPersonId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.SalesPersonId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");
             }
-            else if (quotation.LastModifierUserId != null)
+            else if (quotation.CreatorUserId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.LastModifierUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");
@@ -582,7 +583,7 @@ namespace tibs.stem.Web.Controllers
             long daet = decimal.ToInt64(totalamt);
             string TotalString = converter.Convert(daet);
             body = body.Replace("{Amount_Words}", TotalString);
-
+            header = header.Replace("{LcNumber}", Inquiry.LCNumber ?? "");
             try
             {
                 ConnectionAppService db = new ConnectionAppService();
@@ -771,16 +772,16 @@ namespace tibs.stem.Web.Controllers
                 totalgross = totalgross + dat.OverAllPrice;
             }
 
-            if (quotation.CreatorUserId != null)
+            if (quotation.SalesPersonId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.SalesPersonId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");
             }
-            else if (quotation.LastModifierUserId != null)
+            else if (quotation.CreatorUserId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.LastModifierUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");
@@ -870,7 +871,7 @@ namespace tibs.stem.Web.Controllers
             }
             var ProductContent = ds.Rows[0]["data"].ToString();
             body = body.Replace("{Product_Content}", ProductContent);
-
+            header = header.Replace("{LcNumber}", Inquiry.LCNumber ?? "");
             var rootpath = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json");
@@ -959,6 +960,7 @@ namespace tibs.stem.Web.Controllers
                 header = header.Replace("{Client}", company.Name);
                 header = header.Replace("{CustomerID}", company.CustomerId);
                 header = header.Replace("{TRN}", company.TRNnumber);
+                header = header.Replace("{LcNumber}", Inquiryy.LCNumber ?? "");
                 header = header.Replace("{Title}", quotation.Name ?? "Quotation");
             }
             if (quotation.RFQNo != null && quotation.RFQNo != "")
@@ -1048,16 +1050,16 @@ namespace tibs.stem.Web.Controllers
                 totalgross = totalgross + dat.OverAllPrice;
             }
 
-            if (quotation.CreatorUserId != null)
+            if (quotation.SalesPersonId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.SalesPersonId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");
             }
-            else if (quotation.LastModifierUserId != null)
+            else if (quotation.CreatorUserId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.LastModifierUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");
@@ -1256,6 +1258,7 @@ namespace tibs.stem.Web.Controllers
                 header = header.Replace("{Client}", company.Name);
                 header = header.Replace("{CustomerID}", company.CustomerId);
                 header = header.Replace("{TRN}", company.TRNnumber);
+                header = header.Replace("{LcNumber}", Inquiryy.LCNumber ?? "");
                 header = header.Replace("{Title}", quotation.Name ?? "Quotation");
             }
             if (quotation.RFQNo != null && quotation.RFQNo != "")
@@ -1344,16 +1347,16 @@ namespace tibs.stem.Web.Controllers
                 totalgross = totalgross + dat.OverAllPrice;
             }
 
-            if (quotation.CreatorUserId != null)
+            if (quotation.SalesPersonId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.SalesPersonId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");
             }
-            else if (quotation.LastModifierUserId != null)
+            else if (quotation.CreatorUserId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.LastModifierUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");
@@ -1551,6 +1554,7 @@ namespace tibs.stem.Web.Controllers
                 header = header.Replace("{Client}", company.Name);
                 header = header.Replace("{CustomerID}", company.CustomerId);
                 header = header.Replace("{TRN}", company.TRNnumber);
+                header = header.Replace("{LcNumber}", Inquiryy.LCNumber ?? "");
                 header = header.Replace("{Title}", quotation.Name ?? "Quotation");
             }
             if (quotation.RFQNo != null && quotation.RFQNo != "")
@@ -1640,16 +1644,16 @@ namespace tibs.stem.Web.Controllers
                 totalgross = totalgross + dat.OverAllPrice;
             }
 
-            if (quotation.CreatorUserId != null)
+            if (quotation.SalesPersonId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.SalesPersonId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");
             }
-            else if (quotation.LastModifierUserId != null)
+            else if (quotation.CreatorUserId > 0)
             {
-                var user = (from r in _stemDbContext.Users where r.Id == quotation.LastModifierUserId select r).FirstOrDefault();
+                var user = (from r in _stemDbContext.Users where r.Id == quotation.CreatorUserId select r).FirstOrDefault();
                 body = body.Replace("{CreatorName}", user.FullName);
                 var userDesignation = (from r in _stemDbContext.UserDesignations where r.Id == user.UserDesignationId select r).FirstOrDefault();
                 body = body.Replace("{CreatorRole}", userDesignation != null ? userDesignation.Name : "");

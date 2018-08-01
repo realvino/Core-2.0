@@ -32,6 +32,7 @@ namespace tibs.stem.Tenants.Dashboard
         Task<RecentInquiryActivityList> GetDesignerRecentActivity(NullableIdDto input);
         Task<Array> GetDesignerLeadSummaryGraph(GraphInput input);
         Task<Array> GetDesignerLostReasonGraph(GraphInput input);
-
+        Task<GetSalesLeadList> GetSalesPersonOpportunitiesStatus(GraphInput input);
+        Task<GetSalesLeadList> GetSalesPersonOpportunitiesStatusAllUser(GraphInput input);
     }
 }

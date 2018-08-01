@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Abp.Auditing;
-using Abp.MultiTenancy;
+using Abp.Authorization.Users;
+using Abp.Domain.Repositories;
 using Abp.Runtime.Session;
 using Microsoft.EntityFrameworkCore;
+using tibs.stem.Authorization.Roles;
 using tibs.stem.Chat.SignalR;
 using tibs.stem.Editions;
 using tibs.stem.Sessions.Dto;
@@ -15,6 +17,15 @@ namespace tibs.stem.Sessions
 {
     public class SessionAppService : stemAppServiceBase, ISessionAppService
     {
+        private readonly RoleManager _roleManager;
+        private readonly IRepository<UserRole, long> _userRoleRepository;
+        public SessionAppService(
+            RoleManager roleManager,
+            IRepository<UserRole, long> userRoleRepository)
+        {
+            _roleManager = roleManager;
+            _userRoleRepository = userRoleRepository;
+        }
         [DisableAuditing]
         public async Task<GetCurrentLoginInformationsOutput> GetCurrentLoginInformations()
         {
@@ -43,6 +54,12 @@ namespace tibs.stem.Sessions
             if (AbpSession.UserId.HasValue)
             {
                 output.User = ObjectMapper.Map<UserLoginInfoDto>(await GetCurrentUserAsync());
+                var userrole = (from a in UserManager.Users
+                                join urole in _userRoleRepository.GetAll() on a.Id equals urole.UserId
+                                join role in _roleManager.Roles on urole.RoleId equals role.Id
+                                where urole.UserId == AbpSession.UserId
+                                select role).FirstOrDefault();
+                output.User.Role = userrole.DisplayName;
             }
 
             if (output.Tenant == null)

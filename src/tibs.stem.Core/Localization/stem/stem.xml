@@ -966,6 +966,19 @@
     <text name="MDashboard" value="Marketing Dashboard" />
     <text name="SDashboard" value="Sales Dashboard" />
     <text name="DDashboard" value="Designer Dashboard" />
+    <text name="QuotationRevision" value="Designer Revision" />
+  
+    <text name="Report" value="Report" />
+    <text name="ViewEditor" value="View Editor" />
+    <text name="EditEditor" value="Edit View" />
+    <text name="DeleteEditor" value="Delete View" />
+    <text name="ReportGenerator" value="Report Generator" />
+    <text name="CreateView" value="Create View" />
+    <text name="Forecast" value="Forecast" />
+    <text name="ForecastGrid" value="Forecast Grid" />
+    <text name="TeamSelection" value="Team Selection" />
+    <text name="SalesSelection" value="SalesPerson Selection" />
+    <text name="ForecastKanban" value="Forecast Kanban" />
   
   </texts>
 </localizationDictionary>

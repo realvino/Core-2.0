@@ -52,7 +52,11 @@ namespace tibs.stem.Quotationss.Dto
         public virtual string Total11ValueFormat { get; set; }
         public virtual string Total12ValueFormat { get; set; }
         public virtual DateTime? ClosureDate { get; set; }
-
+        public int SalesPersonId { get; set; }
+        public int CoordinatorId { get; set; }
+        public int DesignerId { get; set; }
+        public int SalesManagerId { get; set; }
+        public int CreatorUserId { get; set; }
 
     }
 }

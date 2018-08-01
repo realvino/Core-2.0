@@ -18,5 +18,7 @@ namespace tibs.stem.Sessions.Dto
         public string EmailPassword { get; set; }
 
         public string ProfilePictureId { get; set; }
+
+        public string Role { get; set; }
     }
 }

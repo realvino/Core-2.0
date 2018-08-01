@@ -79,5 +79,8 @@ namespace tibs.stem.Select2
         Task<SelectDResult> GetDashboardTeam();
         Task<Select3Result> GetDesigners();
         Task<Select2Result> GetFinishes();
+        Task<Select3UserResult> GetTeamUserProfile(NullableIdDto input);
+        Task<SalesPersonTeamDto> GetSalesPersonTeam();
+
     }
 }

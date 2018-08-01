@@ -306,6 +306,8 @@ namespace tibs.stem.Authorization
                 quotationdetail.CreateChildPermission(AppPermissions.Pages_Tenant_Quotation_Quotation_Edit_QuotationDetails_EditQuotationProduct, L("EditQuotationProduct"));
                 quotationdetail.CreateChildPermission(AppPermissions.Pages_Tenant_Quotation_Quotation_Edit_QuotationDetails_DeleteQuotationProduct, L("DeleteQuotationProduct"));
                 quotationdetail.CreateChildPermission(AppPermissions.Pages_Tenant_Quotation_Quotation_Edit_QuotationDetails_DiscountApprove, L("OverAllDiscountApprove"));
+                quotationdetail.CreateChildPermission(AppPermissions.Pages_Tenant_Quotation_Quotation_Designer_Revision_Request, L("QuotationRevision"));
+
 
             quotationedit.CreateChildPermission(AppPermissions.Pages_Tenant_Quotation_Quotation_Edit_ImportHistory, L("ProductImportHistory"));
 
@@ -320,8 +322,25 @@ namespace tibs.stem.Authorization
                 status.CreateChildPermission(AppPermissions.Pages_Tenant_Quotation_QuotationStatus_Edit, L("EditQuotationStatus"));
                 status.CreateChildPermission(AppPermissions.Pages_Tenant_Quotation_QuotationStatus_Delete, L("DeleteQuotationStatus"));
 
+            //Report
+            var report = pages.CreateChildPermission(AppPermissions.Pages_Tenant_Report, L("Report"));
 
- //Administration
+            var viewedtior = report.CreateChildPermission(AppPermissions.Pages_Tenant_Report_ViewEditor, L("ViewEditor"));
+                viewedtior.CreateChildPermission(AppPermissions.Pages_Tenant_Report_ViewEditor_Edit, L("EditEditor"));
+                viewedtior.CreateChildPermission(AppPermissions.Pages_Tenant_Report_ViewEditor_Delete, L("DeleteEditor"));
+
+            var reportGenerator = report.CreateChildPermission(AppPermissions.Pages_Tenant_Report_ReportGenerator, L("ReportGenerator"));
+                reportGenerator.CreateChildPermission(AppPermissions.Pages_Tenant_Report_ReportGenerator_Create, L("CreateView"));
+
+            var forecast = report.CreateChildPermission(AppPermissions.Pages_Tenant_Report_Forecast, L("Forecast"));
+            var forecastgrid = forecast.CreateChildPermission(AppPermissions.Pages_Tenant_Report_Forecast_Grid, L("ForecastGrid"));
+                forecastgrid.CreateChildPermission(AppPermissions.Pages_Tenant_Report_Forecast_Grid_Team, L("TeamSelection"));
+                forecastgrid.CreateChildPermission(AppPermissions.Pages_Tenant_Report_Forecast_Grid_sales, L("SalesSelection"));
+
+            var forecastkanban = forecast.CreateChildPermission(AppPermissions.Pages_Tenant_Report_Forecast_Kanban, L("ForecastKanban"));
+                forecastkanban.CreateChildPermission(AppPermissions.Pages_Tenant_Report_Forecast_Kanban_Team, L("TeamSelection"));
+                forecastkanban.CreateChildPermission(AppPermissions.Pages_Tenant_Report_Forecast_Kanban_Sales, L("SalesSelection"));
+            //Administration
             var administration = pages.CreateChildPermission(AppPermissions.Pages_Administration, L("Administration"));
 
             var roles = administration.CreateChildPermission(AppPermissions.Pages_Administration_Roles, L("Roles"));

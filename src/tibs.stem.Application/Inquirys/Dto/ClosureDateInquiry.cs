@@ -11,8 +11,10 @@ namespace tibs.stem.Inquirys.Dto
         public int Id { get; set; }
         public string MonthName { get; set; }
         public string TotalValueformat { get; set; }
+        public string WeightValueformat { get; set; }
         public DateTime CurrentDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public InquiryClosureDateListDto[] GetTicketReservation { get; set; }
+
     }
 }

@@ -19,6 +19,9 @@ namespace tibs.stem.Inquirys.Dto
         public string MonthValue { get; set; }
         public string ThisweekValue { get; set; }
         public string NextWeekValue { get; set; }
+        public RecentInquiryClosureDto[] OverDueClosureInquiry { get; set; }
+        public string OverDueValue { get; set; }
+
     }
     public class RecentInquiryActivityList
     {
@@ -49,6 +52,7 @@ namespace tibs.stem.Inquirys.Dto
         public virtual string Total { get; set; }
         public virtual string Stage { get; set; }
         public decimal Value { get; set; }
+        public virtual bool Stared { get; set; }
 
     }
 
